@@ -7,7 +7,8 @@
       "bump-minor-pre-major": false,
       "bump-patch-for-minor-pre-major": false,
       "draft": false,
-      "prerelease": false
+      "prerelease": false,
+      "component": "orcal-tauri"
     }
   },
   "include-component-in-tag": false,
