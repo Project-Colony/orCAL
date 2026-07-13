@@ -1,4 +1,5 @@
 {
   "name": "orCAL",
-  "category": "Utilities"
+  "category": "Utilities",
+  "icon": "assets/icons/icon.png"
 }
