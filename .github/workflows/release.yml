@@ -41,7 +41,8 @@ jobs:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
+            # Tauri v1 needs webkit2gtk-4.0, which Ubuntu 24.04 dropped.
+            os: ubuntu-22.04
             asset: orcal-linux
           - target: x86_64-pc-windows-msvc
             os: windows-latest
