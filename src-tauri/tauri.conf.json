@@ -23,12 +23,22 @@
       }
     ],
     "allowlist": {
-      "all": true
+      "all": false,
+      "window": {
+        "all": false,
+        "close": true,
+        "minimize": true,
+        "setSize": true,
+        "setResizable": true,
+        "center": true,
+        "startDragging": true
+      }
     },
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.orcal.app"
+      "identifier": "com.orcal.app",
+      "icon": ["icons/icon.ico", "icons/icon.png"]
     }
   }
 }
