@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3](https://github.com/Project-Colony/orCAL/compare/v0.1.2...v0.1.3) (2026-07-13)
+
+
+### Bug Fixes
+
+* **linux:** pin webkit2gtk to 0.18.0, the version wry compiles against ([#15](https://github.com/Project-Colony/orCAL/issues/15)) ([43cfa7c](https://github.com/Project-Colony/orCAL/commit/43cfa7c8d0adbc7ad925acab95915065818d1c40))
+* **linux:** update wry to 0.24.12 so the webkitgtk backend compiles ([#17](https://github.com/Project-Colony/orCAL/issues/17)) ([8515194](https://github.com/Project-Colony/orCAL/commit/8515194b2a524db4bd54fca39653169887e432c9))
+
 ## [0.1.2](https://github.com/Project-Colony/orCAL/compare/v0.1.1...v0.1.2) (2026-07-13)
 
 
