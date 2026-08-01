@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/Project-Colony/orCAL/compare/v0.1.3...v0.2.0) (2026-08-01)
+
+
+### Features
+
+* **ci:** sign release assets with the Project-Colony org key ([b16621d](https://github.com/Project-Colony/orCAL/commit/b16621d0946322f242f56db913aef6a00c4dc909))
+* declare signed releases in the manifest ([47a90a1](https://github.com/Project-Colony/orCAL/commit/47a90a16bc8c20585b6def47f867ae63db71bb2e))
+
 ## [0.1.3](https://github.com/Project-Colony/orCAL/compare/v0.1.2...v0.1.3) (2026-07-13)
 
 
