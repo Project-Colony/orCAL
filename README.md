@@ -39,3 +39,9 @@ cargo run -p orcal-tauri
 - `ui/`: HTML/CSS/JS interface
 - `tasks/`: future instructions and work plan
 - `docs/`: documentation and compliance
+
+## License
+
+GPL-3.0-or-later. You may redistribute and modify orCAL under the terms of
+version 3 of the GNU General Public License, or (at your option) any later
+version. The full text is in [LICENSE](LICENSE).
