@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Project-Colony/orCAL/compare/v0.2.0...v0.2.1) (2026-08-01)
+
+
+### Bug Fixes
+
+* **ci:** tell gh which repository to upload the signatures to ([#20](https://github.com/Project-Colony/orCAL/issues/20)) ([5a675a5](https://github.com/Project-Colony/orCAL/commit/5a675a563f5dd27cbbf4a891773e83088e76ba69))
+
 ## [0.2.0](https://github.com/Project-Colony/orCAL/compare/v0.1.3...v0.2.0) (2026-08-01)
 
 
