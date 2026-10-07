@@ -25,7 +25,7 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
         id: release
         with:
           config-file: release-please-config.json
@@ -55,7 +55,7 @@ jobs:
             asset: orcal-macos-x86
 
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
@@ -63,7 +63,7 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: ${{ matrix.target }}
 
@@ -80,6 +80,12 @@ jobs:
             libgdk-pixbuf2.0-dev \
             patchelf
 
+      # orCAL is GUI-only (no CLI flag) and needs a display to start, so the
+      # binary itself cannot be smoke-run here; gate the upload on the
+      # calculation engine's tests instead.
+      - name: Test calculation engine
+        run: cargo test -p orcal-core
+
       - name: Build
         run: cargo build --release --target ${{ matrix.target }} -p orcal-tauri
 
@@ -92,7 +98,7 @@ jobs:
         run: copy target\${{ matrix.target }}\release\orCAL.exe ${{ matrix.asset }}
 
       - name: Upload binary to GitHub Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || needs.release-please.outputs.tag_name }}
           files: ${{ matrix.asset }}
