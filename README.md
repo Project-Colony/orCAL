@@ -1,6 +1,6 @@
 # orCAL
 
-orCAL is a Rust calculator with a Tauri interface. The web UI is served by Tauri and calls the Rust calculation engine. It is software from the Colony project (https://github.com/MotherSphere/Colony).
+orCAL is a Rust calculator with a Tauri interface. The web UI is served by Tauri and calls the Rust calculation engine. It is software from the Colony project (https://github.com/Project-Colony/Colony).
 
 ## Features
 
@@ -37,8 +37,6 @@ cargo run -p orcal-tauri
 - `crates/orcal-core`: parsing and evaluation logic
 - `src-tauri`: Tauri application
 - `ui/`: HTML/CSS/JS interface
-- `tasks/`: future instructions and work plan
-- `docs/`: documentation and compliance
 
 ## License
 

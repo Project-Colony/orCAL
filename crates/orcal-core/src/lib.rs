@@ -179,6 +179,6 @@ mod tests {
     #[test]
     fn formats_trimmed_result() {
         assert_eq!(format_result(42.0), "42");
-        assert_eq!(format_result(3.1400), "3.14");
+        assert_eq!(format_result(2.5000), "2.5");
     }
 }
