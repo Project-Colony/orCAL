@@ -25,7 +25,7 @@ fn evaluate_expression(expression: String) -> Result<EvalResponse, String> {
 }
 
 fn window_position_path(app: &tauri::AppHandle) -> Option<PathBuf> {
-    let mut dir = tauri::api::path::app_config_dir(&app.config())?;
+    let mut dir = app.path().app_config_dir().ok()?;
     dir.push("orcal");
     let _ = fs::create_dir_all(&dir);
     dir.push("window-position.json");
@@ -39,7 +39,7 @@ fn load_window_position(app: &tauri::AppHandle) -> Option<PhysicalPosition<i32>>
     Some(PhysicalPosition::new(saved.x, saved.y))
 }
 
-fn save_window_position(app: &tauri::AppHandle, window: &tauri::Window) {
+fn save_window_position(app: &tauri::AppHandle, window: &tauri::WebviewWindow) {
     let Some(path) = window_position_path(app) else {
         return;
     };
@@ -69,7 +69,7 @@ fn position_within_monitor(position: PhysicalPosition<i32>, monitor: &tauri::Mon
 }
 
 fn position_within_available_monitors(
-    window: &tauri::Window,
+    window: &tauri::WebviewWindow,
     position: PhysicalPosition<i32>,
 ) -> bool {
     if let Ok(Some(monitor)) = window.current_monitor() {
@@ -87,7 +87,7 @@ fn position_within_available_monitors(
     false
 }
 
-fn reset_invalid_window_position(app: &tauri::AppHandle, window: &tauri::Window) {
+fn reset_invalid_window_position(app: &tauri::AppHandle, window: &tauri::WebviewWindow) {
     log::debug!("Saved window position is invalid; resetting to centered.");
     if let Some(path) = window_position_path(app) {
         let _ = fs::remove_file(path);
@@ -102,7 +102,7 @@ fn configure_linux_display() {
         // and GBM buffer failures. Force X11 backend via XWayland and disable
         // GPU-accelerated compositing to ensure reliable rendering.
         if std::env::var("WAYLAND_DISPLAY").is_ok()
-            || std::env::var("XDG_SESSION_TYPE").map_or(false, |v| v == "wayland")
+            || std::env::var("XDG_SESSION_TYPE").is_ok_and(|v| v == "wayland")
         {
             std::env::set_var("GDK_BACKEND", "x11");
             std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
@@ -116,12 +116,12 @@ fn main() {
     tauri::Builder::default()
         .setup(|app| {
             let app_handle = app.handle();
-            let window = app.get_window("main").expect("main window");
-            if let Some(position) = load_window_position(&app_handle) {
+            let window = app.get_webview_window("main").expect("main window");
+            if let Some(position) = load_window_position(app_handle) {
                 if position_within_available_monitors(&window, position) {
                     let _ = window.set_position(Position::Physical(position));
                 } else {
-                    reset_invalid_window_position(&app_handle, &window);
+                    reset_invalid_window_position(app_handle, &window);
                 }
             }
             let app_handle_for_event = app_handle.clone();
