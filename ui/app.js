@@ -15,8 +15,8 @@ const statusIconsEl = document.querySelector(".status-icons");
 const statusMessageEl = document.querySelector(".status-message");
 const batteryButton = document.querySelector('[data-action="battery"]');
 
-const tauriInvoke = window.__TAURI__?.tauri?.invoke ?? null;
-const tauriAppWindow = window.__TAURI__?.window?.appWindow ?? null;
+const tauriInvoke = window.__TAURI__?.core?.invoke ?? null;
+const tauriAppWindow = window.__TAURI__?.window?.getCurrentWindow() ?? null;
 const isTauriAvailable = Boolean(tauriAppWindow);
 let statusMessageTimeout = null;
 const batteryLevels = [100, 80, 40, 20, 0];

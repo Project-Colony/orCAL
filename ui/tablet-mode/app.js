@@ -21,7 +21,7 @@ const modeState = {
 };
 
 
-const tauriInvoke = window.__TAURI__?.tauri?.invoke ?? null;
+const tauriInvoke = window.__TAURI__?.core?.invoke ?? null;
 
 // Tablet scientific layout (7 columns x 5 rows).
 // Order matters (CSS grid auto-placement).
@@ -662,7 +662,7 @@ if (modeToggleEl) {
 
 applyModeUI();
 
-const tauriAppWindow = window.__TAURI__?.window?.appWindow ?? null;
+const tauriAppWindow = window.__TAURI__?.window?.getCurrentWindow() ?? null;
 const isTauriAvailable = Boolean(tauriAppWindow);
 const statusMessageEl = document.querySelector(".status-message");
 const statusIconsEl = document.querySelector(".status-icons");

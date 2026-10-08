@@ -1,15 +1,12 @@
 {
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "orCAL",
+  "identifier": "com.orcal.app",
   "build": {
+    "frontendDist": "../ui"
+  },
+  "app": {
     "withGlobalTauri": true,
-    "beforeDevCommand": "",
-    "beforeBuildCommand": "",
-    "devPath": "../ui",
-    "distDir": "../ui"
-  },
-  "package": {
-    "productName": "orCAL"
-  },
-  "tauri": {
     "windows": [
       {
         "title": "orCAL",
@@ -18,26 +15,15 @@
         "resizable": true,
         "maximizable": false,
         "transparent": true,
-        "decorations": false
+        "decorations": false,
+        "shadow": false,
+        "useHttpsScheme": true
       }
-    ],
-    "allowlist": {
-      "all": false,
-      "window": {
-        "all": false,
-        "close": true,
-        "minimize": true,
-        "setSize": true,
-        "setResizable": true,
-        "center": true,
-        "startDragging": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "com.orcal.app",
-      "icon": ["icons/icon.ico", "icons/icon.png"]
-    }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.ico", "icons/icon.png"]
   }
 }
