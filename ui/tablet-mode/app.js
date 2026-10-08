@@ -357,7 +357,6 @@ const safeLocalEvaluate = (rawExpression) => {
     .replace(/−/gu, "-")
     .replace(/,/gu, ".")
     .replace(/π/gu, "PI")
-    .replace(/\bANS\b/gu, "ANS")
     .replace(/(?<![A-Za-z0-9_])e(?![A-Za-z0-9_])/gu, "E")
     .replace(/\^/gu, "**");
 
