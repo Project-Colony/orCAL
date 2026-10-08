@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/Project-Colony/orCAL/compare/v0.2.1...v0.2.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* **release:** sign and publish through the shared Colony workflow ([#30](https://github.com/Project-Colony/orCAL/issues/30)) ([9db6b1a](https://github.com/Project-Colony/orCAL/commit/9db6b1ae5d2c9d1e170e9a9388633e5c0306cdfc))
+
 ## [0.2.1](https://github.com/Project-Colony/orCAL/compare/v0.2.0...v0.2.1) (2026-08-01)
 
 
