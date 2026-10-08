@@ -101,7 +101,9 @@ fn configure_linux_display() {
         // On Wayland, WebKitGTK with transparency can cause protocol errors
         // and GBM buffer failures. Force X11 backend via XWayland and disable
         // GPU-accelerated compositing to ensure reliable rendering.
-        if std::env::var("WAYLAND_DISPLAY").is_ok() || std::env::var("XDG_SESSION_TYPE").map_or(false, |v| v == "wayland") {
+        if std::env::var("WAYLAND_DISPLAY").is_ok()
+            || std::env::var("XDG_SESSION_TYPE").map_or(false, |v| v == "wayland")
+        {
             std::env::set_var("GDK_BACKEND", "x11");
             std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
             std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
@@ -124,13 +126,11 @@ fn main() {
             }
             let app_handle_for_event = app_handle.clone();
             let window_for_event = window.clone();
-            window.on_window_event(move |event| {
-                match event {
-                    WindowEvent::CloseRequested { .. } | WindowEvent::Moved(_) => {
-                        save_window_position(&app_handle_for_event, &window_for_event);
-                    }
-                    _ => {}
+            window.on_window_event(move |event| match event {
+                WindowEvent::CloseRequested { .. } | WindowEvent::Moved(_) => {
+                    save_window_position(&app_handle_for_event, &window_for_event);
                 }
+                _ => {}
             });
             Ok(())
         })
