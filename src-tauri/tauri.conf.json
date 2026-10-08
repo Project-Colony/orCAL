@@ -7,8 +7,7 @@
     "distDir": "../ui"
   },
   "package": {
-    "productName": "orCAL",
-    "version": "0.1.0"
+    "productName": "orCAL"
   },
   "tauri": {
     "windows": [
