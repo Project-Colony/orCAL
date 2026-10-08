@@ -9,7 +9,7 @@ name = "orCAL"
 path = "src/main.rs"
 
 [build-dependencies]
-tauri-build = { version = "1", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
 orcal-core = { path = "../crates/orcal-core" }
