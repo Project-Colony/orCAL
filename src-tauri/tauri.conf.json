@@ -16,7 +16,8 @@
         "maximizable": false,
         "transparent": true,
         "decorations": false,
-        "shadow": false
+        "shadow": false,
+        "useHttpsScheme": true
       }
     ]
   },
