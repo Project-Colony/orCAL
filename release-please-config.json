@@ -8,7 +8,14 @@
       "bump-patch-for-minor-pre-major": false,
       "draft": false,
       "prerelease": false,
-      "extra-files": ["src-tauri/Cargo.toml"]
+      "extra-files": [
+        "src-tauri/Cargo.toml",
+        {
+          "type": "toml",
+          "path": "Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='orcal-tauri')].version"
+        }
+      ]
     }
   }
 }

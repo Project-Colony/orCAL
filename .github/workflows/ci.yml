@@ -51,8 +51,11 @@ jobs:
       - name: Check formatting
         run: cargo fmt --check
 
+      # --locked on the first resolving command: a Cargo.lock that disagrees
+      # with the manifests (a release that bumped one but not the other) fails
+      # here instead of being rewritten silently on the runner.
       - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --locked --all-targets -- -D warnings
 
       - name: Build
         run: cargo build
