@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Project-Colony/orCAL/compare/v0.2.2...v0.3.0) (2026-10-08)
+
+
+### Features
+
+* migrate to Tauri 2 ([#32](https://github.com/Project-Colony/orCAL/issues/32)) ([98e1fd2](https://github.com/Project-Colony/orCAL/commit/98e1fd2787b56111783fc2657025e21e8bececb0))
+
 ## [0.2.2](https://github.com/Project-Colony/orCAL/compare/v0.2.1...v0.2.2) (2026-10-08)
 
 
