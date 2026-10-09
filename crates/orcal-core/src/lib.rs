@@ -298,8 +298,14 @@ fn finite(value: f64) -> Result<f64, ParseError> {
 /// 12 digits of the result cannot hide it. Rounding here gives 0 and 1e-7.
 /// Whole operands add exactly, so their sum is kept as is.
 fn without_cancellation_noise(sum: f64, a: f64, b: f64) -> f64 {
-    let decimals = 14 - a.abs().max(b.abs()).log10().floor() as i32;
-    if (a.fract() == 0.0 && b.fract() == 0.0) || decimals <= 0 {
+    let largest = a.abs().max(b.abs());
+    // A zero, subnormal or infinite operand has no usable log10: 0 + 0 would
+    // compute 14 - i32::MIN and overflow.
+    if (a.fract() == 0.0 && b.fract() == 0.0) || !largest.is_normal() {
+        return sum;
+    }
+    let decimals = 14 - largest.log10().floor() as i32;
+    if decimals <= 0 {
         return sum;
     }
     format!("{sum:.prec$}", prec = decimals as usize)
@@ -657,6 +663,9 @@ mod tests {
     #[test]
     fn cancels_rounding_residue_to_zero() {
         let shown = |expression: &str| format_result(evaluate(expression).unwrap());
+        assert_eq!(shown("0+0"), "0");
+        assert_eq!(shown("5-5+0"), "0");
+        assert_eq!(shown("0-0.5"), "-0.5");
         assert_eq!(shown("0.1+0.2-0.3"), "0");
         assert_eq!(shown("0.3-0.1-0.2"), "0");
         assert_eq!(shown("1.1*3-3.3"), "0");
