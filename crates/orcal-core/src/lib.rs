@@ -305,6 +305,8 @@ fn without_cancellation_noise(sum: f64, a: f64, b: f64) -> f64 {
         return sum;
     }
     let decimals = 14 - largest.log10().floor() as i32;
+    // From 1e14 up, 15 digits leave no decimal to keep: rounding to whole
+    // numbers there would turn an exact 0.5 difference into 0.
     if decimals <= 0 {
         return sum;
     }
@@ -675,6 +677,12 @@ mod tests {
         assert_eq!(shown("1000000000000001-1000000000000000"), "1");
         assert_eq!(shown("0.3-0.2999999"), "0.0000001");
         assert_eq!(format_result(1e-20), "0.00000000000000000001");
+        // The price: past 15 digits of the larger operand a real difference
+        // goes too, as on a 15-digit calculator.
+        assert_eq!(shown("1+0.000000000000001-1"), "0");
+        // From 1e14 up there is no decimal left to round to, so the sum is
+        // kept as is.
+        assert_eq!(shown("100000000000000.5-100000000000000"), "0.5");
         // The value itself is clean, so ANS carries no residue either.
         assert_eq!(evaluate("0.1+0.2").unwrap(), 0.3);
     }
