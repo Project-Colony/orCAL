@@ -4,9 +4,20 @@ orCAL is a Rust calculator with a Tauri interface. The web UI is served by Tauri
 
 ## Features
 
-- Operations: addition, subtraction, multiplication, division
-- Parentheses and decimal numbers
-- Error handling (incomplete expression, division by zero, invalid token)
+- Operations: addition, subtraction, multiplication, division and decimal numbers
+- Scientific keypad (tablet layout): parentheses, powers (`^`, right-associative),
+  factorials (`!`, whole numbers from 0 to 170), sin, cos and tan in degrees,
+  ln, log (base 10), square root, the constants π and e, and ANS for the
+  previous result
+- Implicit multiplication: `2π`, `2(3)` and `(2)(3)` multiply
+- Error handling: incomplete expression, invalid token, division by zero,
+  undefined or infinite result, factorial out of range, and expressions nested
+  more than 256 levels deep
+
+Every expression, from either layout, is evaluated by the Rust engine in
+`crates/orcal-core`. The interface never evaluates code itself, and the web view
+runs under a content security policy that only allows the app's own scripts,
+styles and IPC.
 
 ## Prerequisites
 

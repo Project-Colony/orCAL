@@ -15,10 +15,13 @@ struct WindowPosition {
     y: i32,
 }
 
+/// Evaluates `expression`, with `ANS` standing for `ans`. Errors come back as
+/// the engine's stable code (`error_division_by_zero`, ...), which the UI turns
+/// into a message.
 #[tauri::command]
-fn evaluate_expression(expression: String) -> Result<EvalResponse, String> {
+fn evaluate_expression(expression: String, ans: f64) -> Result<EvalResponse, &'static str> {
     let normalized = expression.replace(',', ".");
-    let value = orcal_core::evaluate(&normalized).map_err(|error| error.to_string())?;
+    let value = orcal_core::evaluate_with(&normalized, ans).map_err(|error| error.code())?;
     Ok(EvalResponse {
         result: orcal_core::format_result(value),
     })

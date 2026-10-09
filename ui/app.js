@@ -235,13 +235,14 @@ const evaluateExpression = async () => {
     return;
   }
   try {
+    // This layout has no ANS key.
     const response = await tauriInvoke("evaluate_expression", {
       expression: toBackendExpression(),
+      ans: 0,
     });
     state.result = formatResult(response.result);
   } catch (error) {
-    state.result =
-      typeof error === "string" ? error : "Invalid expression";
+    state.result = engineErrorMessage(error);
   }
 };
 

@@ -101,8 +101,9 @@ const state = {
   result: "0",
 };
 
+// The last result, sent back to the engine for the ANS key.
 const memory = {
-  ans: "0",
+  ans: 0,
 };
 
 const operatorMap = {
@@ -196,10 +197,15 @@ const formatResult = (value, { useGrouping = false } = {}) => {
 const lastNumberMatch = () =>
   state.expression.match(/(-?\d+(?:[.,]\d+)?)$/u);
 
-const extractLastAtom = () => {
-  const expr = state.expression;
+const extractLastAtom = (expr = state.expression) => {
   if (!expr) {
     return null;
+  }
+
+  // A factorial belongs to the atom it follows: x² on "5!" squares 5!.
+  if (expr.endsWith("!")) {
+    const atom = extractLastAtom(expr.slice(0, -1));
+    return atom && { start: atom.start, end: expr.length, text: expr.slice(atom.start) };
   }
 
   if (expr.endsWith("ANS")) {
@@ -242,7 +248,7 @@ const extractLastAtom = () => {
     return { start: fnStart, end: expr.length, text: expr.slice(fnStart) };
   }
 
-  const match = lastNumberMatch();
+  const match = expr.match(/(-?\d+(?:[.,]\d+)?)$/u);
   if (match) {
     const [number] = match;
     return {
@@ -336,97 +342,10 @@ const applyReciprocal = () => {
   state.expression = `${before}1/(${target})`;
 };
 
-const degreesToRadians = (value) => (value * Math.PI) / 180;
-
-const safeLocalEvaluate = (rawExpression) => {
-  const allowedIdentifiers = new Set([
-    "sin",
-    "cos",
-    "tan",
-    "ln",
-    "log",
-    "sqrt",
-    "PI",
-    "E",
-    "ANS",
-  ]);
-
-  let expr = rawExpression
-    .replace(/×/gu, "*")
-    .replace(/÷/gu, "/")
-    .replace(/−/gu, "-")
-    .replace(/,/gu, ".")
-    .replace(/π/gu, "PI")
-    .replace(/(?<![A-Za-z0-9_])e(?![A-Za-z0-9_])/gu, "E")
-    .replace(/\^/gu, "**");
-
-  // Reject anything that is not part of our tiny expression language.
-  if (!/^[0-9A-Za-z_+\-*/().\s]*$/u.test(expr)) {
-    throw new Error("Invalid expression");
-  }
-
-  const identifiers = expr.match(/[A-Za-z_]+/gu) ?? [];
-  for (const ident of identifiers) {
-    if (!allowedIdentifiers.has(ident)) {
-      throw new Error("Unsupported function");
-    }
-  }
-
-  const context = {
-    sin: (value) => Math.sin(degreesToRadians(value)),
-    cos: (value) => Math.cos(degreesToRadians(value)),
-    tan: (value) => Math.tan(degreesToRadians(value)),
-    ln: (value) => Math.log(value),
-    log: (value) => (Math.log10 ? Math.log10(value) : Math.log(value) / Math.LN10),
-    sqrt: (value) => Math.sqrt(value),
-    PI: Math.PI,
-    E: Math.E,
-    ANS: Number.parseFloat(memory.ans.toString().replace(",", ".")) || 0,
-  };
-
-  const names = Object.keys(context);
-  const values = Object.values(context);
-
-  // eslint-disable-next-line no-new-func
-  const fn = new Function(...names, `"use strict"; return (${expr});`);
-  const result = fn(...values);
-
-  if (typeof result !== "number" || Number.isNaN(result) || !Number.isFinite(result)) {
-    throw new Error("Invalid result");
-  }
-  return result;
-};
-
-const factorialNumber = (value) => {
-  if (!Number.isFinite(value)) {
-    throw new Error("Invalid expression");
-  }
-  if (!Number.isInteger(value) || value < 0) {
-    throw new Error("Factorial: integer ≥ 0");
-  }
-  if (value > 170) {
-    // 171! overflows to Infinity in JS.
-    throw new Error("Factorial too large");
-  }
-  let result = 1;
-  for (let i = 2; i <= value; i += 1) {
-    result *= i;
-  }
-  return result;
-};
-
 const applyFactorial = () => {
-  const atom = extractLastAtom();
-  if (!atom) {
-    return;
-  }
-  try {
-    const value = safeLocalEvaluate(atom.text);
-    const computed = factorialNumber(value);
-    const before = state.expression.slice(0, atom.start);
-    state.expression = `${before}${formatResult(computed.toString(), { useGrouping: false })}`;
-  } catch (error) {
-    state.result = typeof error === "string" ? error : error?.message ?? "Invalid expression";
+  // The engine evaluates the postfix "!" along with the rest on "=".
+  if (extractLastAtom()) {
+    state.expression = `${state.expression}!`;
   }
 };
 
@@ -441,34 +360,19 @@ const evaluateExpression = async () => {
   if (!state.expression) {
     return;
   }
-  const raw = state.expression;
-  const shouldUseBackend =
-    Boolean(tauriInvoke) &&
-    !/[a-z]/iu.test(raw) &&
-    !/[π^√]/u.test(raw) &&
-    !/\bANS\b/u.test(raw) &&
-    !/(?<![A-Za-z0-9_])e(?![A-Za-z0-9_])/u.test(raw);
-
-  if (shouldUseBackend) {
-    try {
-      const response = await tauriInvoke("evaluate_expression", {
-        expression: toBackendExpression(),
-      });
-      state.result = formatResult(response.result);
-      memory.ans = state.result;
-      return;
-    } catch (error) {
-      state.result = typeof error === "string" ? error : "Invalid expression";
-      return;
-    }
+  if (!tauriInvoke) {
+    state.result = "Available in Tauri";
+    return;
   }
-
   try {
-    const computed = safeLocalEvaluate(raw);
-    state.result = formatResult(computed.toString());
-    memory.ans = state.result;
+    const response = await tauriInvoke("evaluate_expression", {
+      expression: toBackendExpression(),
+      ans: memory.ans,
+    });
+    state.result = formatResult(response.result);
+    memory.ans = Number.parseFloat(response.result);
   } catch (error) {
-    state.result = typeof error === "string" ? error : error?.message ?? "Invalid expression";
+    state.result = engineErrorMessage(error);
   }
 };
 
