@@ -100,9 +100,11 @@ impl Parser<'_> {
         let mut value = self.parse_term()?;
         loop {
             if self.eat('+') {
-                value += self.parse_term()?;
+                let term = self.parse_term()?;
+                value = without_cancellation_noise(value + term, value, term);
             } else if self.eat('-') {
-                value -= self.parse_term()?;
+                let term = self.parse_term()?;
+                value = without_cancellation_noise(value - term, value, term);
             } else {
                 return Ok(value);
             }
@@ -286,6 +288,23 @@ fn finite(value: f64) -> Result<f64, ParseError> {
     } else {
         Err(ParseError::InvalidResult)
     }
+}
+
+/// `sum`, the sum or difference of `a` and `b`, rounded to 15 significant
+/// digits of the larger operand, the precision an f64 keeps for any decimal.
+/// Decimals such as 0.1 are not exact in binary, so 0.1 + 0.2 - 0.3 leaves
+/// 5.6e-17 and 0.3 - 0.2999999 gives 1.00000000003e-7. When the operands
+/// cancel out, that residue is most of the result, and rounding the screen to
+/// 12 digits of the result cannot hide it. Rounding here gives 0 and 1e-7.
+/// Whole operands add exactly, so their sum is kept as is.
+fn without_cancellation_noise(sum: f64, a: f64, b: f64) -> f64 {
+    let decimals = 14 - a.abs().max(b.abs()).log10().floor() as i32;
+    if (a.fract() == 0.0 && b.fract() == 0.0) || decimals <= 0 {
+        return sum;
+    }
+    format!("{sum:.prec$}", prec = decimals as usize)
+        .parse()
+        .unwrap_or(sum)
 }
 
 fn factorial(n: f64) -> Result<f64, ParseError> {
@@ -633,6 +652,22 @@ mod tests {
         assert_eq!(shown("200*0.005"), "1");
         assert_eq!(shown("sin(30)"), "0.5");
         assert_eq!(shown("1.1*1.1"), "1.21");
+    }
+
+    #[test]
+    fn cancels_rounding_residue_to_zero() {
+        let shown = |expression: &str| format_result(evaluate(expression).unwrap());
+        assert_eq!(shown("0.1+0.2-0.3"), "0");
+        assert_eq!(shown("0.3-0.1-0.2"), "0");
+        assert_eq!(shown("1.1*3-3.3"), "0");
+        assert_eq!(shown("sqrt(2)^2-2"), "0");
+        // Real small differences survive.
+        assert_eq!(shown("1000000000000.5-1000000000000"), "0.5");
+        assert_eq!(shown("1000000000000001-1000000000000000"), "1");
+        assert_eq!(shown("0.3-0.2999999"), "0.0000001");
+        assert_eq!(format_result(1e-20), "0.00000000000000000001");
+        // The value itself is clean, so ANS carries no residue either.
+        assert_eq!(evaluate("0.1+0.2").unwrap(), 0.3);
     }
 
     #[test]

@@ -5,8 +5,9 @@ orCAL is a Rust calculator with a Tauri interface. The web UI is served by Tauri
 ## Features
 
 - Operations: addition, subtraction, multiplication, division and decimal numbers
-- Results are shown to 12 significant digits, so binary rounding noise never
-  reaches the screen: `0.1+0.2` gives 0.3 and `1/8` gives 0.125
+- Results are rounded to 12 significant digits (whole parts are never cut),
+  and sums and differences to the 15 digits an f64 keeps, so `0.1+0.2` gives
+  0.3, `0.1+0.2-0.3` gives 0 and `1/8` gives 0.125
 - Percent: `%` divides the number before it by 100 at full precision, so
   `200*0.5%` gives 1
 - Scientific keypad (tablet layout): parentheses, powers (`^`, right-associative),
