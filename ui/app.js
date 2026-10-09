@@ -164,15 +164,19 @@ const formatResult = (value, { useGrouping = false } = {}) => {
   }).format(numberValue);
 };
 
-const lastNumberMatch = () =>
-  state.expression.match(/(-?\d+(?:[.,]\d+)?)$/u);
+// The number the expression ends with. A "-" in front of it is its sign only at
+// the start or after an operator or "(": the number is -3 in "2*-3" but 3 in
+// "2-3", where the "-" is a subtraction.
+const lastNumber = (expr = state.expression) => {
+  const match = expr.match(/(?:^|[+\-*/^(])(-?\d+(?:[.,]\d+)?)$|(\d+(?:[.,]\d+)?)$/u);
+  return match ? match[1] ?? match[2] : null;
+};
 
 const toggleSign = () => {
-  const match = lastNumberMatch();
-  if (!match) {
+  const number = lastNumber();
+  if (!number) {
     return;
   }
-  const [number] = match;
   const start = state.expression.slice(0, -number.length);
   const updated = number.startsWith("-")
     ? number.slice(1)
@@ -181,11 +185,10 @@ const toggleSign = () => {
 };
 
 const applyPercent = () => {
-  const match = lastNumberMatch();
-  if (!match) {
+  const number = lastNumber();
+  if (!number) {
     return;
   }
-  const [number] = match;
   const normalized = number.replace(",", ".");
   const value = Number.parseFloat(normalized);
   if (Number.isNaN(value)) {
@@ -210,8 +213,8 @@ const appendOperator = (operator) => {
 
 const appendInput = (value) => {
   if (value === "." || value === ",") {
-    const match = lastNumberMatch();
-    if (match && /[.,]/u.test(match[0])) {
+    const number = lastNumber();
+    if (number && /[.,]/u.test(number)) {
       return;
     }
   }

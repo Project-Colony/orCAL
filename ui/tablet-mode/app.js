@@ -194,8 +194,13 @@ const formatResult = (value, { useGrouping = false } = {}) => {
   }).format(numberValue);
 };
 
-const lastNumberMatch = () =>
-  state.expression.match(/(-?\d+(?:[.,]\d+)?)$/u);
+// The number the expression ends with. A "-" in front of it is its sign only at
+// the start or after an operator or "(": the number is -3 in "2*-3" but 3 in
+// "2-3", where the "-" is a subtraction.
+const lastNumber = (expr = state.expression) => {
+  const match = expr.match(/(?:^|[+\-*/^(])(-?\d+(?:[.,]\d+)?)$|(\d+(?:[.,]\d+)?)$/u);
+  return match ? match[1] ?? match[2] : null;
+};
 
 const extractLastAtom = (expr = state.expression) => {
   if (!expr) {
@@ -235,22 +240,16 @@ const extractLastAtom = (expr = state.expression) => {
       return null;
     }
 
-    // Include any function name right before the parentheses (sin, cos, ln, ...)
-    let fnStart = start;
-    for (let i = start - 1; i >= 0; i -= 1) {
-      if (/[a-z]/iu.test(expr[i])) {
-        fnStart = i;
-      } else {
-        break;
-      }
-    }
+    // Include the function name right before the parentheses (sin, cos, ln, ...),
+    // and only that: in "esin(30)" the e is a separate factor.
+    const name = expr.slice(0, start).match(/(?:sin|cos|tan|ln|log|sqrt)$/u);
+    const fnStart = name ? start - name[0].length : start;
 
     return { start: fnStart, end: expr.length, text: expr.slice(fnStart) };
   }
 
-  const match = expr.match(/(-?\d+(?:[.,]\d+)?)$/u);
-  if (match) {
-    const [number] = match;
+  const number = lastNumber(expr);
+  if (number) {
     return {
       start: expr.length - number.length,
       end: expr.length,
@@ -262,11 +261,10 @@ const extractLastAtom = (expr = state.expression) => {
 };
 
 const toggleSign = () => {
-  const match = lastNumberMatch();
-  if (!match) {
+  const number = lastNumber();
+  if (!number) {
     return;
   }
-  const [number] = match;
   const start = state.expression.slice(0, -number.length);
   const updated = number.startsWith("-")
     ? number.slice(1)
@@ -275,11 +273,10 @@ const toggleSign = () => {
 };
 
 const applyPercent = () => {
-  const match = lastNumberMatch();
-  if (!match) {
+  const number = lastNumber();
+  if (!number) {
     return;
   }
-  const [number] = match;
   const normalized = number.replace(",", ".");
   const value = Number.parseFloat(normalized);
   if (Number.isNaN(value)) {
@@ -304,8 +301,8 @@ const appendOperator = (operator) => {
 
 const appendInput = (value) => {
   if (value === "." || value === ",") {
-    const match = lastNumberMatch();
-    if (match && /[.,]/u.test(match[0])) {
+    const number = lastNumber();
+    if (number && /[.,]/u.test(number)) {
       return;
     }
   }

@@ -93,11 +93,7 @@ impl Parser<'_> {
         if !self.is_eof() {
             return Err(self.unexpected());
         }
-        if value.is_finite() {
-            Ok(value)
-        } else {
-            Err(ParseError::InvalidResult)
-        }
+        finite(value)
     }
 
     fn parse_expression(&mut self) -> Result<f64, ParseError> {
@@ -145,14 +141,14 @@ impl Parser<'_> {
         if self.eat('^') {
             // The exponent is a unary, so it may carry a sign (2^-1) and a
             // further power (2^3^2), which is what makes ^ right-associative.
-            Ok(base.powf(self.nested(Self::parse_unary)?))
+            finite(base.powf(self.nested(Self::parse_unary)?))
         } else {
             Ok(base)
         }
     }
 
     fn parse_postfix(&mut self) -> Result<f64, ParseError> {
-        let mut value = self.parse_primary()?;
+        let mut value = finite(self.parse_primary()?)?;
         while self.eat('!') {
             value = factorial(value)?;
         }
@@ -179,7 +175,8 @@ impl Parser<'_> {
         let rest = &self.input[self.pos..];
         if let Some((name, function)) = FUNCTIONS.iter().find(|(name, _)| rest.starts_with(name)) {
             self.pos += name.len();
-            return Ok(function(self.nested(Self::parse_primary)?));
+            let argument = finite(self.nested(Self::parse_primary)?)?;
+            return Ok(function(argument));
         }
         if let Some((name, value)) = CONSTANTS.iter().find(|(name, _)| rest.starts_with(name)) {
             self.pos += name.len();
@@ -277,6 +274,17 @@ impl Parser<'_> {
 
     fn is_eof(&self) -> bool {
         self.pos >= self.input.len()
+    }
+}
+
+/// Rejects NaN and infinity as soon as an operand produces one. Checking only
+/// the final result is not enough: `/` and `^` can turn them back into a finite
+/// number, so 1/tan(90) would give 0 and sqrt(-1)^0 would give 1.
+fn finite(value: f64) -> Result<f64, ParseError> {
+    if value.is_finite() {
+        Ok(value)
+    } else {
+        Err(ParseError::InvalidResult)
     }
 }
 
@@ -393,6 +401,9 @@ mod tests {
         assert_eq!(evaluate("(-2)^2"), Ok(4.0));
         assert_eq!(evaluate("2^-1"), Ok(0.5));
         assert_eq!(evaluate("-3!"), Ok(-6.0));
+        // What the keypad sends for 2 - 3, then ± (and x²).
+        assert_eq!(evaluate("2--3"), Ok(5.0));
+        assert_eq!(evaluate("2-(3)^2"), Ok(-7.0));
     }
 
     #[test]
@@ -409,7 +420,6 @@ mod tests {
         assert_eq!(evaluate("171!"), Err(ParseError::FactorialTooLarge));
         assert_eq!(evaluate("2.5!"), Err(ParseError::FactorialDomain));
         assert_eq!(evaluate("(-1)!"), Err(ParseError::FactorialDomain));
-        assert_eq!(evaluate("sqrt(-1)!"), Err(ParseError::FactorialDomain));
     }
 
     #[test]
@@ -460,6 +470,7 @@ mod tests {
         assert_eq!(evaluate("2^2(3)"), Ok(12.0));
         assert_eq!(evaluate("2+3(4)"), Ok(14.0));
         assert_eq!(evaluate("2(3)-1"), Ok(5.0));
+        approx("e(sin(30))^2", E / 4.0);
     }
 
     #[test]
@@ -507,6 +518,41 @@ mod tests {
         assert_eq!(evaluate("0^-1"), Err(ParseError::InvalidResult));
         assert_eq!(evaluate("10^400"), Err(ParseError::InvalidResult));
         assert_eq!(evaluate(&"9".repeat(400)), Err(ParseError::InvalidResult));
+        assert_eq!(evaluate("sqrt(-1)!"), Err(ParseError::InvalidResult));
+    }
+
+    #[test]
+    fn undefined_intermediate_results_are_not_hidden() {
+        // Each of these turns NaN or infinity back into a finite number if only
+        // the final result is checked.
+        for expression in [
+            "1/tan(90)",
+            "1/ln(0)",
+            "e^ln(0)",
+            "sqrt(-1)^0",
+            "1^ln(-1)",
+            "sqrt(sqrt(-1))^0",
+            "1/10^400",
+            "2^-10^400",
+            "(10^400)^0",
+            "1/(10^200*10^200)",
+        ] {
+            assert_eq!(
+                evaluate(expression),
+                Err(ParseError::InvalidResult),
+                "{expression}"
+            );
+        }
+        let huge = format!("1/{}", "9".repeat(400));
+        assert_eq!(evaluate(&huge), Err(ParseError::InvalidResult));
+        assert_eq!(
+            evaluate_with("1/ANS", f64::INFINITY),
+            Err(ParseError::InvalidResult)
+        );
+        assert_eq!(
+            evaluate_with("ANS^0", f64::NAN),
+            Err(ParseError::InvalidResult)
+        );
     }
 
     #[test]
