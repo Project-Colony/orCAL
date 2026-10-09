@@ -11,47 +11,8 @@ const resultEl = document.querySelector("[data-result]");
 const resultWrapperEl = document.querySelector(".screen-result-wrapper");
 const resultTooltipEl = document.querySelector("[data-result-tooltip]");
 const statusTimeEl = document.querySelector(".status-time");
-const frameEl = document.querySelector(".calculator-tablet-frame");
-const tabletBodyEl = document.querySelector(".calculator-tablet-body");
-const modePillEl = document.querySelector(".mode-pill");
-const modeToggleEl = document.querySelector(".status-mode-toggle");
-
-const modeState = {
-  value: localStorage.getItem("orcal-calc-mode") || "scientific",
-};
-
 
 const tauriInvoke = window.__TAURI__?.core?.invoke ?? null;
-
-// Tablet scientific layout (7 columns x 5 rows).
-// Order matters (CSS grid auto-placement).
-// Standard (simplified) keypad (4 columns x 5 rows).
-const keysStandard = [
-  { label: "C", type: "utility", action: "clear" },
-  { label: "±", type: "utility", action: "toggle-sign" },
-  { label: "%", type: "utility", action: "percent" },
-  { label: "⌫", type: "backspace", action: "backspace", ariaLabel: "Backspace" },
-
-  { label: "7", type: "number" },
-  { label: "8", type: "number" },
-  { label: "9", type: "number" },
-  { label: "÷", type: "operator", action: "operator" },
-
-  { label: "4", type: "number" },
-  { label: "5", type: "number" },
-  { label: "6", type: "number" },
-  { label: "×", type: "operator", action: "operator" },
-
-  { label: "1", type: "number" },
-  { label: "2", type: "number" },
-  { label: "3", type: "number" },
-  { label: "−", type: "operator", action: "operator" },
-
-  { label: "0", type: "number" },
-  { label: ".", type: "number", ariaLabel: "Decimal point" },
-  { label: "+", type: "operator", action: "operator" },
-  { label: "=", type: "operator", action: "equals" },
-];
 
 // Scientific keypad (7 columns x 5 rows).
 const keysScientific = [
@@ -114,11 +75,8 @@ const operatorMap = {
   "^": "^",
 };
 
-let activeKeys = modeState.value === "scientific" ? keysScientific : keysStandard;
-
 const renderKeys = () => {
-  keypad.innerHTML = "";
-  activeKeys.forEach((key) => {
+  keysScientific.forEach((key) => {
     const button = document.createElement("button");
     button.type = "button";
     button.classList.add("key");
@@ -179,19 +137,6 @@ const updateScreen = () => {
       );
     });
   }
-};
-
-const formatResult = (value, { useGrouping = false } = {}) => {
-  const normalized = value.toString().replace(",", ".");
-  const numberValue = Number.parseFloat(normalized);
-  if (Number.isNaN(numberValue)) {
-    return value;
-  }
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 8,
-    useGrouping,
-  }).format(numberValue);
 };
 
 // The number the expression ends with. A "-" in front of it is its sign only at
@@ -282,10 +227,16 @@ const applyPercent = () => {
   if (Number.isNaN(value)) {
     return;
   }
-  const percentValue = value / 100;
-  const formatted = formatResult(percentValue.toString(), { useGrouping: false });
+  // The full value, not a display rounding: 200*0.5% must give 1. An f64
+  // round-trips any decimal of up to 15 significant digits, so 1.1% gives 0.011
+  // rather than 0.011000000000000001, and toLocaleString never writes an
+  // exponent, which the engine would read as the constant e (1e-7 is 1*e-7).
+  const percent = (value / 100).toLocaleString("en-US", {
+    useGrouping: false,
+    maximumSignificantDigits: 15,
+  });
   const start = state.expression.slice(0, -number.length);
-  state.expression = `${start}${formatted}`;
+  state.expression = `${start}${percent}`;
 };
 
 const appendOperator = (operator) => {
@@ -366,8 +317,9 @@ const evaluateExpression = async () => {
       expression: toBackendExpression(),
       ans: memory.ans,
     });
-    state.result = formatResult(response.result);
-    memory.ans = Number.parseFloat(response.result);
+    // Already rounded by the engine: shown as is. ANS keeps the full value.
+    state.result = response.result;
+    memory.ans = response.value;
   } catch (error) {
     state.result = engineErrorMessage(error);
   }
@@ -487,80 +439,6 @@ toggleButton.addEventListener("click", () => {
   localStorage.setItem("orcal-theme", themeState.value);
   applyTheme();
 });
-
-
-const applyModeUI = () => {
-  const isScientific = modeState.value === "scientific";
-  if (frameEl) {
-    frameEl.dataset.mode = modeState.value;
-  }
-  if (tabletBodyEl) {
-    tabletBodyEl.setAttribute(
-      "aria-label",
-      isScientific ? "Scientific calculator" : "Calculator"
-    );
-  }
-  if (modePillEl) {
-    modePillEl.textContent = isScientific ? "Scientific" : "Standard";
-    modePillEl.classList.remove("mode-pill-swap");
-    // Force reflow to restart animation.
-    void modePillEl.offsetWidth;
-    modePillEl.classList.add("mode-pill-swap");
-  }
-  if (modeToggleEl) {
-    modeToggleEl.setAttribute("aria-pressed", String(isScientific));
-    modeToggleEl.setAttribute(
-      "aria-label",
-      isScientific ? "Switch to standard mode" : "Switch to scientific mode"
-    );
-    modeToggleEl.title = isScientific
-      ? "Switch to standard mode"
-      : "Switch to scientific mode";
-    modeToggleEl.classList.remove("mode-toggle-pulse");
-    void modeToggleEl.offsetWidth;
-    modeToggleEl.classList.add("mode-toggle-pulse");
-  }
-};
-
-let isModeSwitching = false;
-
-const setMode = (nextMode) => {
-  if (isModeSwitching || nextMode === modeState.value) {
-    return;
-  }
-  isModeSwitching = true;
-
-  // Animate keypad out, then swap, then animate in.
-  keypad.classList.remove("keypad-swap-in");
-  keypad.classList.add("keypad-swap-out");
-
-  window.setTimeout(() => {
-    modeState.value = nextMode;
-    localStorage.setItem("orcal-calc-mode", nextMode);
-    activeKeys = nextMode === "scientific" ? keysScientific : keysStandard;
-
-    applyModeUI();
-    renderKeys();
-
-    keypad.classList.remove("keypad-swap-out");
-    keypad.classList.add("keypad-swap-in");
-
-    window.setTimeout(() => {
-      keypad.classList.remove("keypad-swap-in");
-      isModeSwitching = false;
-    }, 240);
-  }, 180);
-};
-
-const toggleMode = () => {
-  setMode(modeState.value === "scientific" ? "standard" : "scientific");
-};
-
-if (modeToggleEl) {
-  modeToggleEl.addEventListener("click", toggleMode);
-}
-
-applyModeUI();
 
 const tauriAppWindow = window.__TAURI__?.window?.getCurrentWindow() ?? null;
 const isTauriAvailable = Boolean(tauriAppWindow);

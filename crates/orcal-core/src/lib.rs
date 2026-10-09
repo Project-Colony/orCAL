@@ -100,9 +100,11 @@ impl Parser<'_> {
         let mut value = self.parse_term()?;
         loop {
             if self.eat('+') {
-                value += self.parse_term()?;
+                let term = self.parse_term()?;
+                value = without_cancellation_noise(value + term, value, term);
             } else if self.eat('-') {
-                value -= self.parse_term()?;
+                let term = self.parse_term()?;
+                value = without_cancellation_noise(value - term, value, term);
             } else {
                 return Ok(value);
             }
@@ -288,6 +290,29 @@ fn finite(value: f64) -> Result<f64, ParseError> {
     }
 }
 
+/// `sum`, the sum or difference of `a` and `b`, rounded to 15 significant
+/// digits of the larger operand, the precision an f64 keeps for any decimal.
+/// Decimals such as 0.1 are not exact in binary, so 0.1 + 0.2 - 0.3 leaves
+/// 5.6e-17 and 0.3 - 0.2999999 gives 1.00000000003e-7. When the operands
+/// cancel out, that residue is most of the result, and rounding the screen to
+/// 12 digits of the result cannot hide it. Rounding here gives 0 and 1e-7.
+/// Whole operands add exactly, so their sum is kept as is.
+fn without_cancellation_noise(sum: f64, a: f64, b: f64) -> f64 {
+    let largest = a.abs().max(b.abs());
+    // A zero, subnormal or infinite operand has no usable log10: 0 + 0 would
+    // compute 14 - i32::MIN and overflow.
+    if (a.fract() == 0.0 && b.fract() == 0.0) || !largest.is_normal() {
+        return sum;
+    }
+    let decimals = 14 - largest.log10().floor() as i32;
+    if decimals <= 0 {
+        return sum;
+    }
+    format!("{sum:.prec$}", prec = decimals as usize)
+        .parse()
+        .unwrap_or(sum)
+}
+
 fn factorial(n: f64) -> Result<f64, ParseError> {
     // NaN and infinity have a NaN fractional part, so they land here too.
     if n < 0.0 || n.fract() != 0.0 {
@@ -333,20 +358,30 @@ pub fn evaluate_with(expression: &str, ans: f64) -> Result<f64, ParseError> {
     .parse()
 }
 
+/// Significant digits a result is shown with. An f64 carries 15 to 17, and the
+/// last ones hold the binary rounding error: 0.1 + 0.2 is 0.30000000000000004.
+const RESULT_DIGITS: usize = 12;
+
+/// The text the interface shows for `value`: rounded to `RESULT_DIGITS`
+/// significant digits, in plain notation, without trailing zeros.
 pub fn format_result(value: f64) -> String {
-    if value == 0.0 {
+    let rounded = if value.abs() >= 10f64.powi(RESULT_DIGITS as i32) {
+        // The rounding never reaches into the whole part: past 12 integer
+        // digits only the fraction goes, so 20! keeps every digit.
+        value.round()
+    } else {
+        // Scientific notation rounds to significant digits whatever the
+        // magnitude. Parsing it back and printing the f64 gives the shortest
+        // plain text for it: no trailing zeros and no exponent.
+        format!("{value:.prec$e}", prec = RESULT_DIGITS - 1)
+            .parse()
+            .unwrap_or(value)
+    };
+    if rounded == 0.0 {
+        // Also covers -0, which would print as "-0".
         return "0".to_string();
     }
-    let mut text = format!("{value}");
-    if text.contains('.') {
-        while text.ends_with('0') {
-            text.pop();
-        }
-        if text.ends_with('.') {
-            text.pop();
-        }
-    }
-    text
+    rounded.to_string()
 }
 
 #[cfg(test)]
@@ -609,5 +644,55 @@ mod tests {
     fn formats_trimmed_result() {
         assert_eq!(format_result(42.0), "42");
         assert_eq!(format_result(2.5000), "2.5");
+        assert_eq!(format_result(-0.0), "0");
+        assert_eq!(format_result(-7.25), "-7.25");
+    }
+
+    #[test]
+    fn formats_without_float_noise() {
+        let shown = |expression: &str| format_result(evaluate(expression).unwrap());
+        assert_eq!(shown("0.1+0.2"), "0.3");
+        assert_eq!(shown("1/8"), "0.125");
+        assert_eq!(shown("1/3"), "0.333333333333");
+        assert_eq!(shown("2/3"), "0.666666666667");
+        assert_eq!(shown("200*0.005"), "1");
+        assert_eq!(shown("sin(30)"), "0.5");
+        assert_eq!(shown("1.1*1.1"), "1.21");
+    }
+
+    #[test]
+    fn cancels_rounding_residue_to_zero() {
+        let shown = |expression: &str| format_result(evaluate(expression).unwrap());
+        assert_eq!(shown("0+0"), "0");
+        assert_eq!(shown("5-5+0"), "0");
+        assert_eq!(shown("0-0.5"), "-0.5");
+        assert_eq!(shown("0.1+0.2-0.3"), "0");
+        assert_eq!(shown("0.3-0.1-0.2"), "0");
+        assert_eq!(shown("1.1*3-3.3"), "0");
+        assert_eq!(shown("sqrt(2)^2-2"), "0");
+        // Real small differences survive.
+        assert_eq!(shown("1000000000000.5-1000000000000"), "0.5");
+        assert_eq!(shown("1000000000000001-1000000000000000"), "1");
+        assert_eq!(shown("0.3-0.2999999"), "0.0000001");
+        assert_eq!(format_result(1e-20), "0.00000000000000000001");
+        // The value itself is clean, so ANS carries no residue either.
+        assert_eq!(evaluate("0.1+0.2").unwrap(), 0.3);
+    }
+
+    #[test]
+    fn formats_extreme_magnitudes_in_plain_notation() {
+        assert_eq!(format_result(1e20), "100000000000000000000");
+        assert_eq!(format_result(-1e20), "-100000000000000000000");
+        assert_eq!(format_result(1e-20), "0.00000000000000000001");
+        assert_eq!(format_result(1.5e-7), "0.00000015");
+        assert_eq!(format_result(123_456_789.123_456), "123456789.123");
+        assert_eq!(format_result(999_999_999_999.999_9), "1000000000000");
+        // Whole parts longer than 12 digits are never rounded, only the fraction.
+        assert_eq!(format_result(1_234_567_890_123.0), "1234567890123");
+        assert_eq!(format_result(1_234_567_890_123.4), "1234567890123");
+        assert_eq!(
+            format_result(evaluate("20!").unwrap()),
+            "2432902008176640000"
+        );
     }
 }
