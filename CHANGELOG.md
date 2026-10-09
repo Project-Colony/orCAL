@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/Project-Colony/orCAL/compare/v0.3.0...v0.3.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* evaluate scientific expressions in the Rust engine and lock the webview down with a content security policy ([#36](https://github.com/Project-Colony/orCAL/issues/36)) ([faf1048](https://github.com/Project-Colony/orCAL/commit/faf1048a6505532d50d1d7de5bc2b248160ea10e))
+* **ui:** show results at full precision and keep percent exact ([#39](https://github.com/Project-Colony/orCAL/issues/39)) ([92c2af5](https://github.com/Project-Colony/orCAL/commit/92c2af5b344106e80608c1d1144a70ac1d89b3ec))
+
 ## [0.3.0](https://github.com/Project-Colony/orCAL/compare/v0.2.2...v0.3.0) (2026-10-08)
 
 
