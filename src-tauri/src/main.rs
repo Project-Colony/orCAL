@@ -6,7 +6,10 @@ use tauri::{Manager, PhysicalPosition, Position, WindowEvent};
 
 #[derive(Serialize)]
 struct EvalResponse {
+    /// What the screen shows, rounded to hide float noise.
     result: String,
+    /// The unrounded value, kept for ANS so chained results lose nothing.
+    value: f64,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -24,6 +27,7 @@ fn evaluate_expression(expression: String, ans: f64) -> Result<EvalResponse, &'s
     let value = orcal_core::evaluate_with(&normalized, ans).map_err(|error| error.code())?;
     Ok(EvalResponse {
         result: orcal_core::format_result(value),
+        value,
     })
 }
 

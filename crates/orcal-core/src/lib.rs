@@ -333,20 +333,30 @@ pub fn evaluate_with(expression: &str, ans: f64) -> Result<f64, ParseError> {
     .parse()
 }
 
+/// Significant digits a result is shown with. An f64 carries 15 to 17, and the
+/// last ones hold the binary rounding error: 0.1 + 0.2 is 0.30000000000000004.
+const RESULT_DIGITS: usize = 12;
+
+/// The text the interface shows for `value`: rounded to `RESULT_DIGITS`
+/// significant digits, in plain notation, without trailing zeros.
 pub fn format_result(value: f64) -> String {
-    if value == 0.0 {
+    let rounded = if value.abs() >= 10f64.powi(RESULT_DIGITS as i32) {
+        // The rounding never reaches into the whole part: past 12 integer
+        // digits only the fraction goes, so 20! keeps every digit.
+        value.round()
+    } else {
+        // Scientific notation rounds to significant digits whatever the
+        // magnitude. Parsing it back and printing the f64 gives the shortest
+        // plain text for it: no trailing zeros and no exponent.
+        format!("{value:.prec$e}", prec = RESULT_DIGITS - 1)
+            .parse()
+            .unwrap_or(value)
+    };
+    if rounded == 0.0 {
+        // Also covers -0, which would print as "-0".
         return "0".to_string();
     }
-    let mut text = format!("{value}");
-    if text.contains('.') {
-        while text.ends_with('0') {
-            text.pop();
-        }
-        if text.ends_with('.') {
-            text.pop();
-        }
-    }
-    text
+    rounded.to_string()
 }
 
 #[cfg(test)]
@@ -609,5 +619,36 @@ mod tests {
     fn formats_trimmed_result() {
         assert_eq!(format_result(42.0), "42");
         assert_eq!(format_result(2.5000), "2.5");
+        assert_eq!(format_result(-0.0), "0");
+        assert_eq!(format_result(-7.25), "-7.25");
+    }
+
+    #[test]
+    fn formats_without_float_noise() {
+        let shown = |expression: &str| format_result(evaluate(expression).unwrap());
+        assert_eq!(shown("0.1+0.2"), "0.3");
+        assert_eq!(shown("1/8"), "0.125");
+        assert_eq!(shown("1/3"), "0.333333333333");
+        assert_eq!(shown("2/3"), "0.666666666667");
+        assert_eq!(shown("200*0.005"), "1");
+        assert_eq!(shown("sin(30)"), "0.5");
+        assert_eq!(shown("1.1*1.1"), "1.21");
+    }
+
+    #[test]
+    fn formats_extreme_magnitudes_in_plain_notation() {
+        assert_eq!(format_result(1e20), "100000000000000000000");
+        assert_eq!(format_result(-1e20), "-100000000000000000000");
+        assert_eq!(format_result(1e-20), "0.00000000000000000001");
+        assert_eq!(format_result(1.5e-7), "0.00000015");
+        assert_eq!(format_result(123_456_789.123_456), "123456789.123");
+        assert_eq!(format_result(999_999_999_999.999_9), "1000000000000");
+        // Whole parts longer than 12 digits are never rounded, only the fraction.
+        assert_eq!(format_result(1_234_567_890_123.0), "1234567890123");
+        assert_eq!(format_result(1_234_567_890_123.4), "1234567890123");
+        assert_eq!(
+            format_result(evaluate("20!").unwrap()),
+            "2432902008176640000"
+        );
     }
 }

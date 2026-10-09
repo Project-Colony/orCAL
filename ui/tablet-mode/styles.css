@@ -296,36 +296,6 @@ html {
   pointer-events: none;
 }
 
-/* Mode toggle (📶) */
-.status-mode-toggle {
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
-  transition: transform var(--button-transition), background-color var(--theme-transition),
-    color var(--theme-transition), box-shadow var(--button-transition);
-}
-
-.status-mode-toggle:active {
-  transform: scale(0.92);
-}
-
-.calculator-tablet-frame[data-mode="scientific"] .status-mode-toggle {
-  background: color-mix(in srgb, var(--palette-accent) 18%, var(--status-icon-background));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--palette-accent) 36%, transparent);
-}
-
-.status-mode-toggle.mode-toggle-pulse {
-  animation: modeTogglePulse 320ms var(--button-transition);
-}
-
-@keyframes modeTogglePulse {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.12); }
-  100% { transform: scale(1); }
-}
-
 .status-brand {
   text-align: center;
   font-size: 16px;
@@ -466,40 +436,6 @@ html {
   align-content: stretch;
 }
 
-
-/* Smooth transition when swapping keypad layouts (standard <-> scientific). */
-.calculator-keypad {
-  will-change: transform, opacity, filter;
-}
-
-.calculator-keypad.keypad-swap-out {
-  animation: keypadSwapOut 180ms var(--button-transition) forwards;
-  pointer-events: none;
-}
-
-.calculator-keypad.keypad-swap-in {
-  animation: keypadSwapIn 220ms var(--button-transition);
-}
-
-@keyframes keypadSwapOut {
-  from { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
-  to   { opacity: 0; transform: translateX(-10px) scale(0.985); filter: blur(2px); }
-}
-
-@keyframes keypadSwapIn {
-  from { opacity: 0; transform: translateX(10px) scale(0.985); filter: blur(2px); }
-  to   { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
-}
-
-.mode-pill.mode-pill-swap {
-  animation: modePillSwap 220ms var(--button-transition);
-}
-
-@keyframes modePillSwap {
-  from { opacity: 0.65; transform: translateY(-2px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* Slightly more generous sizing on tablet. */
 .calculator-tablet-frame .calculator-screen {
   padding: 18px 16px;
@@ -514,28 +450,11 @@ html {
   font-size: 54px;
 }
 
-.calculator-tablet-frame[data-mode="scientific"] .calculator-keypad {
+.calculator-tablet-frame .calculator-keypad {
   --keypad-columns: 7;
   gap: 14px;
   padding: 0;
   align-content: stretch;
-}
-
-.calculator-tablet-frame[data-mode="standard"] .calculator-keypad {
-  --keypad-columns: 4;
-  gap: 12px;
-  padding: 0 4px;
-  align-content: stretch;
-}
-
-/* Slightly larger keys in standard mode to keep proportions nice. */
-.calculator-tablet-frame[data-mode="standard"] .key {
-  min-height: 66px;
-  font-size: 24px;
-}
-
-.calculator-tablet-frame[data-mode="standard"] .key-muted {
-  display: none;
 }
 
 .calculator-tablet-frame .key {
@@ -645,11 +564,7 @@ html {
     min-width: 0;
   }
 
-  .calculator-tablet-frame[data-mode="scientific"] .calculator-keypad {
+  .calculator-tablet-frame .calculator-keypad {
     --keypad-columns: 5;
-  }
-
-  .calculator-tablet-frame[data-mode="standard"] .calculator-keypad {
-    --keypad-columns: 4;
   }
 }

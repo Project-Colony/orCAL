@@ -151,19 +151,6 @@ const updateScreen = () => {
   }
 };
 
-const formatResult = (value, { useGrouping = false } = {}) => {
-  const normalized = value.toString().replace(",", ".");
-  const numberValue = Number.parseFloat(normalized);
-  if (Number.isNaN(numberValue)) {
-    return value;
-  }
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-    useGrouping,
-  }).format(numberValue);
-};
-
 // The number the expression ends with. A "-" in front of it is its sign only at
 // the start or after an operator or "(": the number is -3 in "2*-3" but 3 in
 // "2-3", where the "-" is a subtraction.
@@ -194,10 +181,16 @@ const applyPercent = () => {
   if (Number.isNaN(value)) {
     return;
   }
-  const percentValue = value / 100;
-  const formatted = formatResult(percentValue.toString(), { useGrouping: false });
+  // The full value, not a display rounding: 200*0.5% must give 1. An f64
+  // round-trips any decimal of up to 15 significant digits, so 1.1% gives 0.011
+  // rather than 0.011000000000000001, and toLocaleString never writes an
+  // exponent, which the engine would read as the constant e (1e-7 is 1*e-7).
+  const percent = (value / 100).toLocaleString("en-US", {
+    useGrouping: false,
+    maximumSignificantDigits: 15,
+  });
   const start = state.expression.slice(0, -number.length);
-  state.expression = `${start}${formatted}`;
+  state.expression = `${start}${percent}`;
 };
 
 const appendOperator = (operator) => {
@@ -243,7 +236,8 @@ const evaluateExpression = async () => {
       expression: toBackendExpression(),
       ans: 0,
     });
-    state.result = formatResult(response.result);
+    // Already rounded by the engine: shown as is.
+    state.result = response.result;
   } catch (error) {
     state.result = engineErrorMessage(error);
   }
@@ -371,23 +365,11 @@ statusIconsEl?.addEventListener("click", (event) => {
       console.warn("Tauri appWindow unavailable for minimize.");
     }
   }
-
-  if (button.dataset.action === "close") {
-    if (appWindow?.close) {
-      appWindow.close();
-    } else {
-      window.close();
-      showStatusMessage("Available only in the Tauri app.");
-      console.warn("Tauri appWindow unavailable for close.");
-    }
-  }
 });
 
 if (!isTauriAvailable) {
   document
-    .querySelectorAll(
-      ".status-icon-button[data-action='minimize'], .status-icon-button[data-action='close']",
-    )
+    .querySelectorAll(".status-icon-button[data-action='minimize']")
     .forEach((button) => {
       button.setAttribute("aria-disabled", "true");
       button.classList.add("status-icon-button--disabled");
