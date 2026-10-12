@@ -1,42 +1,58 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-loading>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orCAL - Calculator</title>
+    <title>orCAL</title>
+    <link rel="stylesheet" href="../vendor/colony/colony-accents.css" />
+    <link rel="stylesheet" href="../vendor/colony/colony-themes.css" />
+    <link rel="stylesheet" href="../common/base.css" />
+    <link rel="stylesheet" href="../common/preferences.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="calculator-app">
-      <!-- Tablet-first layout (horizontal). Phone sizing is still supported via CSS fallbacks. -->
-      <section class="calculator-tablet-frame">
+      <section class="calculator-frame calculator-tablet-frame">
         <div class="drag-region" data-tauri-drag-region aria-hidden="true"></div>
         <header class="calculator-status">
           <div class="status">
             <div class="status-time" aria-live="polite">--:--</div>
-            <div class="status-icons" aria-label="Status and modes">
-              <button class="status-icon status-icon-button" type="button" data-action="switch-phone" aria-label="Switch to phone mode" title="Switch to phone mode">📶</button>
-              <button class="status-icon status-icon-button" type="button" data-action="minimize" aria-label="Minimize">📡</button>
-              <button class="status-icon status-icon-button" type="button" data-action="battery" aria-label="Battery 100%">🔋</button>
+            <div class="status-icons" role="group" data-i18n-aria-label="window_controls">
+              <button
+                class="status-icon-button glyph"
+                type="button"
+                data-action="switch-layout"
+                data-layout="phone"
+                data-i18n-aria-label="layout_switch_phone"
+                data-i18n-title="layout_switch_phone"
+              >&#xf011c;</button>
+              <button
+                class="status-icon-button glyph"
+                type="button"
+                data-action="minimize"
+                data-i18n-aria-label="window_minimize"
+                data-i18n-title="window_minimize"
+              >&#xf05b0;</button>
+              <button
+                class="status-icon-button glyph"
+                type="button"
+                data-action="close"
+                data-i18n-aria-label="window_close"
+                data-i18n-title="window_close"
+              >&#xf0156;</button>
             </div>
           </div>
           <div class="status-message" role="status" aria-live="polite"></div>
-          <div class="status-brand">orCAL</div>
+          <button class="status-brand" type="button" data-i18n-title="settings_title">
+            orCAL<span class="glyph" aria-hidden="true">&#xf013;</span>
+          </button>
         </header>
 
-        <section class="calculator-tablet-body" aria-label="Scientific calculator">
+        <section class="calculator-tablet-body" data-i18n-aria-label="calculator_scientific" data-calculator>
           <div class="calculator-tablet-left">
             <div class="calculator-toolbar">
-              <div class="calculator-mode" aria-label="Calculation mode">
-                <span class="mode-pill" aria-hidden="true">Scientific</span>
-              </div>
-
-              <div class="theme-toggle" role="group" aria-label="Change theme">
-                <button class="theme-toggle-button" type="button" aria-pressed="false">
-                  <span class="theme-toggle-icon" aria-hidden="true">☀️</span>
-                  <span class="theme-toggle-label" aria-live="polite">Latte</span>
-                  <span class="theme-toggle-icon" aria-hidden="true">🌙</span>
-                </button>
+              <div class="calculator-mode" data-i18n-aria-label="mode_label">
+                <span class="mode-pill" aria-hidden="true" data-i18n="mode_scientific"></span>
               </div>
             </div>
 
@@ -50,13 +66,11 @@
           </div>
 
           <div class="calculator-tablet-right">
-            <section class="calculator-keypad" aria-label="Calculator keypad"></section>
+            <section class="calculator-keypad" data-i18n-aria-label="keypad_label"></section>
           </div>
         </section>
-
       </section>
     </main>
-    <script src="../errors.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>
