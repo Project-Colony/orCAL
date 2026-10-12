@@ -1,5 +1,6 @@
-//! Remembers where the main window was, and puts it back there on the next
-//! start when that spot is still on a connected monitor.
+//! The main window: opens it on the layout chosen in Preferences, remembers
+//! where it was, and puts it back there on the next start when that spot is
+//! still on a connected monitor.
 //!
 //! The position is written atomically to `<config>/window-position.json`. A
 //! drag sends a stream of `Moved` events, so a move is saved once the window
@@ -13,15 +14,63 @@ use std::time::Duration;
 use std::{fs, io, thread};
 
 use serde::{Deserialize, Serialize};
-use tauri::{Monitor, PhysicalPosition, Position, WebviewWindow, WindowEvent};
+use tauri::{
+    App, LogicalSize, Monitor, PhysicalPosition, Position, WebviewUrl, WebviewWindow,
+    WebviewWindowBuilder, WindowEvent,
+};
 
 use crate::paths;
+use crate::preferences::Preferences;
 
 /// The file name, in the config folder.
 pub const FILE: &str = "window-position.json";
 
 /// How long the window must stay still before a move is saved.
 const SETTLE: Duration = Duration::from_millis(500);
+
+/// Opens the main window, described in tauri.conf.json (where it is not
+/// created at startup), on the layout chosen in Preferences.
+pub fn open_main_window(app: &App, preferences: &Preferences) -> tauri::Result<WebviewWindow> {
+    let mut config = app
+        .config()
+        .app
+        .windows
+        .iter()
+        .find(|window| window.label == "main")
+        .cloned()
+        .expect("tauri.conf.json describes the main window");
+    let layout = preferences.startup_layout;
+    config.url = WebviewUrl::App(layout.page().into());
+    (config.width, config.height) = layout.size();
+
+    let mut builder = WebviewWindowBuilder::from_config(app.handle(), &config)?;
+    // The webview profile leaves Tauri's default location only once the theme
+    // the old builds kept in its localStorage has been imported
+    // (common/prefs.js): until then the old profile is the only place it is.
+    // After that orCAL keeps nothing in webview storage, so the profile is
+    // cache: `<cache>/webview` on Linux and Windows, and memory only on macOS,
+    // where WKWebView cannot be given a folder and would otherwise write to
+    // ~/Library/WebKit.
+    if preferences.legacy_storage_imported {
+        if cfg!(target_os = "macos") {
+            builder = builder.incognito(true);
+        } else {
+            match paths::cache_dir() {
+                Ok(cache) => builder = builder.data_directory(cache.join("webview")),
+                Err(error) => log::warn!("the webview keeps its default profile: {error}"),
+            }
+        }
+    }
+    let window = builder.build()?;
+    // A floating window manager can map the window before the builder's size
+    // reaches it (XWayland only saw a 10x10 hint) and pick its own size;
+    // asking again once the window exists gives the layout's size.
+    let (width, height) = layout.size();
+    if let Err(error) = window.set_size(LogicalSize::new(width, height)) {
+        log::warn!("the window keeps the size the window manager chose: {error}");
+    }
+    Ok(window)
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 struct WindowPosition {
