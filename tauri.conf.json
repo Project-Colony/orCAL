@@ -29,6 +29,8 @@
     },
     "windows": [
       {
+        "label": "main",
+        "create": false,
         "title": "orCAL",
         "width": 360,
         "height": 720,

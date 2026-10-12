@@ -150,7 +150,11 @@ impl Preferences {
         take(object, "text_size_a11y", &mut p.text_size_a11y);
         take(object, "locale", &mut p.locale);
         take(object, "startup_layout", &mut p.startup_layout);
-        take(object, "legacy_storage_imported", &mut p.legacy_storage_imported);
+        take(
+            object,
+            "legacy_storage_imported",
+            &mut p.legacy_storage_imported,
+        );
         p
     }
 }
@@ -230,7 +234,10 @@ impl Store {
     }
 
     pub fn get(&self) -> Preferences {
-        self.current.lock().unwrap_or_else(|e| e.into_inner()).clone()
+        self.current
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
     }
 
     /// Save `preferences` and make them current. On a write error nothing
@@ -274,11 +281,13 @@ mod tests {
 
     #[test]
     fn writes_the_colony_field_names_and_values() {
-        let mut p = Preferences::default();
-        p.font_size = FontSize::Large;
-        p.text_size_a11y = TextSize::XLarge;
-        p.locale = Some(Locale::Fr);
-        p.startup_layout = Layout::Tablet;
+        let p = Preferences {
+            font_size: FontSize::Large,
+            text_size_a11y: TextSize::XLarge,
+            locale: Some(Locale::Fr),
+            startup_layout: Layout::Tablet,
+            ..Preferences::default()
+        };
         let json: Value = serde_json::to_value(&p).unwrap();
         assert_eq!(json["selected_theme"], "catppuccin");
         assert_eq!(json["selected_variant"], "latte");
@@ -288,7 +297,10 @@ mod tests {
         assert_eq!(json["startup_layout"], "tablet");
         // Unset options are left out, not written as null.
         assert!(json.get("selected_accent").is_none());
-        assert!(serde_json::to_value(Preferences::default()).unwrap().get("locale").is_none());
+        assert!(serde_json::to_value(Preferences::default())
+            .unwrap()
+            .get("locale")
+            .is_none());
         assert_eq!(parse(&json.to_string()), p);
     }
 
@@ -303,7 +315,10 @@ mod tests {
                 "keyboard_nav": true
             }"#,
         );
-        assert_eq!((p.selected_theme.as_str(), p.selected_variant.as_str()), ("nord", "dark"));
+        assert_eq!(
+            (p.selected_theme.as_str(), p.selected_variant.as_str()),
+            ("nord", "dark")
+        );
         assert_eq!(p.selected_accent.as_deref(), Some("violet"));
         assert!(p.auto_accent && p.high_contrast && p.dyslexia_font && p.reduce_motion);
         assert!(!p.animations);
@@ -343,9 +358,11 @@ mod tests {
     fn saves_atomically_and_loads_back() {
         let dir = temp_dir("prefs-roundtrip");
         let path = file_in(&dir);
-        let mut p = Preferences::default();
-        p.selected_variant = "mocha".to_string();
-        p.legacy_storage_imported = true;
+        let p = Preferences {
+            selected_variant: "mocha".to_string(),
+            legacy_storage_imported: true,
+            ..Preferences::default()
+        };
         save(&path, &p).unwrap();
         assert_eq!(load(&path), p);
         assert!(!path.with_extension("json.tmp").exists());
@@ -361,7 +378,10 @@ mod tests {
         assert_eq!(load(&path), Preferences::default());
         assert!(!path.exists());
         let backup = path.with_extension("json.bak");
-        assert_eq!(fs::read_to_string(backup).unwrap(), "{\"selected_theme\": \"nor");
+        assert_eq!(
+            fs::read_to_string(backup).unwrap(),
+            "{\"selected_theme\": \"nor"
+        );
         fs::remove_dir_all(dir).unwrap();
     }
 

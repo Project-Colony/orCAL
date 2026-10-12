@@ -4,9 +4,13 @@ mod commands;
 mod engine;
 #[cfg(target_os = "linux")]
 mod linux_display;
+mod migrate;
+mod paths;
+mod preferences;
 mod window_state;
 
-use tauri::Manager;
+use preferences::{Preferences, Store};
+use tauri::{App, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 fn main() {
     // Before anything else, and without opening a window: the release
@@ -21,13 +25,70 @@ fn main() {
 
     tauri::Builder::default()
         .setup(|app| {
-            let window = app.get_webview_window("main").expect("main window");
-            window_state::attach(app.handle(), &window);
+            let config_dir = paths::config_dir()
+                .inspect_err(|error| log::warn!("orCAL cannot keep its settings: {error}"))
+                .ok();
+            let legacy_dir = migrate::legacy_config_dir();
+            if let (Some(config), Some(legacy)) = (&config_dir, &legacy_dir) {
+                if let Err(error) = migrate::run(legacy, config) {
+                    log::warn!("settings from before the Colony layout not copied: {error}");
+                }
+            }
+
+            let store = Store::open(config_dir.as_deref().map(preferences::file_in));
+            let mut preferences = store.get();
+            // Every build before the Colony layout created its config folder on
+            // first launch, so without one there is no old webview profile and
+            // no theme in it to import: start on the new profile straight away.
+            if !preferences.legacy_storage_imported && legacy_dir.is_some_and(|dir| !dir.exists()) {
+                preferences.legacy_storage_imported = true;
+                if let Err(error) = store.set(preferences.clone()) {
+                    log::warn!("preferences not saved: {error}");
+                }
+            }
+            app.manage(store);
+
+            let window = open_main_window(app, &preferences)?;
+            window_state::attach(&window, config_dir.as_deref());
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![commands::evaluate_expression])
+        .invoke_handler(tauri::generate_handler![
+            commands::evaluate_expression,
+            commands::get_app_info,
+            preferences::get_preferences,
+            preferences::set_preferences,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// Opens the main window, described in tauri.conf.json (where it is not
+/// created at startup), on the layout chosen in Preferences.
+fn open_main_window(app: &App, preferences: &Preferences) -> tauri::Result<WebviewWindow> {
+    let mut config = app
+        .config()
+        .app
+        .windows
+        .iter()
+        .find(|window| window.label == "main")
+        .cloned()
+        .expect("tauri.conf.json describes the main window");
+    let layout = preferences.startup_layout;
+    config.url = WebviewUrl::App(layout.page().into());
+    (config.width, config.height) = layout.size();
+
+    let mut builder = WebviewWindowBuilder::from_config(app.handle(), &config)?;
+    // The webview profile moves to Colony/orCAL only once the theme the old
+    // builds kept in its localStorage has been imported (common/prefs.js):
+    // until then the old profile, Tauri's default, is the only place it is.
+    // macOS WKWebView has no data directory and keeps its default location.
+    if preferences.legacy_storage_imported {
+        match paths::data_dir() {
+            Ok(data) => builder = builder.data_directory(data.join("webview")),
+            Err(error) => log::warn!("the webview keeps its default profile: {error}"),
+        }
+    }
+    builder.build()
 }
 
 /// Whether the command line, without the program name, asks for the version.

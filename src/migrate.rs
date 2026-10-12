@@ -42,7 +42,10 @@ pub fn run(legacy: &Path, config: &Path) -> io::Result<()> {
     }
     fs::write(
         marker,
-        format!("Settings from before the Colony layout were looked for in {}.\n", legacy.display()),
+        format!(
+            "Settings from before the Colony layout were looked for in {}.\n",
+            legacy.display()
+        ),
     )
 }
 
@@ -72,7 +75,11 @@ mod tests {
         assert!(config.join(MARKER).exists());
 
         // The marker skips it from then on, even if the old file changes.
-        fs::write(legacy.join("orcal").join(window_state::FILE), r#"{"x":0,"y":0}"#).unwrap();
+        fs::write(
+            legacy.join("orcal").join(window_state::FILE),
+            r#"{"x":0,"y":0}"#,
+        )
+        .unwrap();
         fs::remove_file(&new).unwrap();
         run(&legacy, &config).unwrap();
         assert!(!new.exists());

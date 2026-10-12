@@ -47,6 +47,27 @@ cargo run
 
 `orCAL --version` prints the version and exits without opening a window.
 
+## Where orCAL keeps its files
+
+Like every Colony program, orCAL keeps its files under `Colony/orCAL/`, in the
+local (never roaming) application folders:
+
+| | Linux | Windows | macOS |
+|---|---|---|---|
+| Settings | `~/.config/Colony/orCAL/` | `%LOCALAPPDATA%\Colony\orCAL\` | `~/Library/Application Support/Colony/orCAL/` |
+| Web view data | `~/.local/share/Colony/orCAL/webview/` | `%LOCALAPPDATA%\Colony\orCAL\webview\` | the system's WebKit location |
+
+The settings folder holds `preferences/preferences.json` (theme, text size,
+accessibility, language and startup layout, saved as soon as they change) and
+`window-position.json`. A preferences file orCAL cannot read is kept as
+`preferences.json.bak` and orCAL starts from the defaults.
+
+Versions before the Colony layout kept these in `com.orcal.app` folders. The
+first launch of a newer version copies the window position over and imports
+the theme from the old web view storage; the launch after that switches to the
+new web view folder. The old folders are left in place and can be deleted by
+hand.
+
 ## Development
 
 - `cargo run` to run the Tauri app
@@ -57,10 +78,15 @@ cargo run
 
 - `src/main.rs`: entry point and Tauri setup
 - `src/engine.rs`: parsing and evaluation logic
-- `src/commands.rs`: the command the interface calls to evaluate an expression
+- `src/commands.rs`: the commands the interface calls to evaluate an expression and to fill the About page
 - `src/window_state.rs`: remembers the window position between runs
+- `src/paths.rs`: the Colony folder layout
+- `src/preferences.rs`: `preferences.json` and the commands that read and write it
+- `src/migrate.rs`: copies the settings of versions before the Colony layout
 - `src/linux_display.rs`: the WebKitGTK workaround for Wayland
-- `src/ui/`: HTML/CSS/JS interface
+- `src/ui/`: HTML/CSS/JS interface; `src/ui/common/` is shared by both layouts
+- `src/ui/vendor/colony/`: the Colony theme data, refreshed with
+  `scripts/sync-colony-tokens.sh <commit>` and never edited by hand
 - `tauri.conf.json`: window, content security policy and capability settings
 - `assets/icons/`: application icons
 

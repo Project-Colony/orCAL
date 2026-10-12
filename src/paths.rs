@@ -154,7 +154,10 @@ pub(crate) mod tests {
             locate::data_dir().unwrap(),
             cache_in(under(dirs::cache_dir(), "cache", PROGRAM).unwrap(), false),
         ] {
-            assert!(path.ends_with(Path::new("Colony").join("orCAL")), "{path:?}");
+            assert!(
+                path.ends_with(Path::new("Colony").join("orCAL")),
+                "{path:?}"
+            );
         }
     }
 
