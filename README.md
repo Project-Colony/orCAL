@@ -104,10 +104,12 @@ hand.
 - `src/ui/common/`: what both layouts share: the theme tokens and fonts
   (`base.css`), the window chrome, the Preferences page, and the preferences
   and translation layers
-- `src/ui/i18n/`: the interface strings, `en.json` (canonical) and `fr.json`
+- `src/ui/i18n/`: orCAL's own interface strings, `en.json` (canonical) and
+  `fr.json`
 - `src/ui/fonts/`: JetBrains Mono Nerd Font and OpenDyslexic, each with its
   licence
-- `src/ui/vendor/colony/`: the Colony theme data, refreshed with
+- `src/ui/vendor/colony/`: the Colony theme data, with the strings every
+  Colony program shares (Preferences, theme and accent names), refreshed with
   `scripts/sync-colony-tokens.sh <commit>` and never edited by hand
 - `tauri.conf.json`: window, content security policy and capability settings
 - `assets/icons/`: application icons

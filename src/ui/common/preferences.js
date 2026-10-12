@@ -7,7 +7,7 @@
 
 import { preferences, updatePreferences } from "./prefs.js";
 import { applyPreferences, contrastOn } from "./theme.js";
-import { label, setLocale, t } from "./i18n.js";
+import { label, setLocale, t, themeCatalog } from "./i18n.js";
 
 // Nerd Font codepoints (colony_ui::widgets::icons).
 const CHEVRON_RIGHT = "\u{f054}";
@@ -54,20 +54,6 @@ const uid = (prefix) => `${prefix}-${(nextId += 1)}`;
 
 const glyph = (codepoint, className = "") =>
   h("span", { class: `glyph ${className}`.trim(), "aria-hidden": "true" }, codepoint);
-
-/** themes.json, the vendored Colony theme and accent catalog. */
-const loadCatalog = async () => {
-  if (!catalog) {
-    try {
-      const response = await fetch(new URL("../vendor/colony/themes.json", import.meta.url));
-      catalog = await response.json();
-    } catch (error) {
-      console.warn("orCAL could not read the theme catalog", error);
-      catalog = { families: [], accents: [] };
-    }
-  }
-  return catalog;
-};
 
 /** Save `changes`, put them into effect and show them on the page. */
 const change = async (changes) => {
@@ -507,7 +493,7 @@ export const isPreferencesOpen = () => Boolean(page && !page.hidden);
 export const togglePreferences = async () => {
   const open = !isPreferencesOpen();
   if (open) {
-    await loadCatalog();
+    catalog = await themeCatalog();
     category = 0;
     render();
   }

@@ -1,6 +1,8 @@
 // The interface strings, in English (canonical) and French: i18n/en.json and
-// i18n/fr.json, whose key sets src/i18n.rs holds equal. Theme and accent names
-// are not here: they come with the themes, in vendor/colony/themes.json.
+// i18n/fr.json, whose key sets src/i18n.rs holds equal. The strings every
+// Colony program shares (the Preferences skeleton, theme and accent names) are
+// not copied there: they come with the themes, in the `labels` of
+// vendor/colony/themes.json, and orCAL's own strings are laid over them.
 //
 // Markup names its strings with data-i18n (text), data-i18n-title and
 // data-i18n-aria-label; translate() fills them in.
@@ -11,12 +13,32 @@ let locale = "en";
 let english = {};
 let strings = {};
 
-const fetchTable = async (name) => {
-  const response = await fetch(new URL(`../i18n/${name}.json`, import.meta.url));
+const fetchJson = async (path) => {
+  const response = await fetch(new URL(path, import.meta.url));
   if (!response.ok) {
-    throw new Error(`i18n/${name}.json: ${response.status}`);
+    throw new Error(`${path}: ${response.status}`);
   }
   return response.json();
+};
+
+let catalog = null;
+
+/**
+ * themes.json, the vendored Colony catalog: themes, accents and the shared
+ * labels. Read once; empty if it cannot be read.
+ */
+export const themeCatalog = () => {
+  catalog ??= fetchJson("../vendor/colony/themes.json").catch((error) => {
+    console.warn("orCAL could not read the theme catalog", error);
+    return { families: [], accents: [], labels: {} };
+  });
+  return catalog;
+};
+
+/** The strings of locale `name`: Colony's shared ones, then orCAL's own. */
+const fetchTable = async (name) => {
+  const [{ labels }, own] = await Promise.all([themeCatalog(), fetchJson(`../i18n/${name}.json`)]);
+  return { ...labels?.[name], ...own };
 };
 
 /** The locale for a preference: the saved one, else the system's. */

@@ -1,6 +1,8 @@
 //! Checks on the interface strings in `src/ui/i18n/`. The strings themselves
-//! are read by the web view (src/ui/common/i18n.js); this module only holds
-//! them to Colony's rules, so a missing translation fails `cargo test`.
+//! are read by the web view (src/ui/common/i18n.js), on top of the labels every
+//! Colony program shares, which come with the vendored `themes.json`; this
+//! module only holds them to Colony's rules, so a missing translation fails
+//! `cargo test`.
 
 use std::collections::BTreeSet;
 
@@ -8,6 +10,7 @@ use serde_json::{Map, Value};
 
 const EN: &str = include_str!("ui/i18n/en.json");
 const FR: &str = include_str!("ui/i18n/fr.json");
+const CATALOG: &str = include_str!("ui/vendor/colony/themes.json");
 
 /// Every file that names a string by its key.
 const SOURCES: [(&str, &str); 6] = [
@@ -29,6 +32,16 @@ fn table(json: &str) -> Map<String, Value> {
     match serde_json::from_str(json) {
         Ok(Value::Object(table)) => table,
         other => panic!("a locale file is a JSON object of strings, got {other:?}"),
+    }
+}
+
+/// The shared English labels of themes.json, which common/i18n.js lays
+/// orCAL's own strings over.
+fn shared_english() -> Map<String, Value> {
+    let catalog: Value = serde_json::from_str(CATALOG).expect("themes.json is JSON");
+    match &catalog["labels"]["en"] {
+        Value::Object(labels) if !labels.is_empty() => labels.clone(),
+        other => panic!("themes.json has no English labels: {other:?}"),
     }
 }
 
@@ -99,19 +112,20 @@ fn no_string_is_empty() {
 
 #[test]
 fn every_key_the_interface_uses_exists() {
-    let en = table(EN);
+    let mut en = shared_english();
+    en.extend(table(EN));
     for (file, source) in SOURCES {
         for key in used_keys(source) {
             assert!(
                 en.contains_key(&key),
-                "{file} uses {key}, missing from en.json"
+                "{file} uses {key}, in neither en.json nor themes.json"
             );
         }
     }
     // Built from parts in common/preferences.js.
     for size in ["small", "default", "large", "xlarge"] {
         let key = format!("settings_font_size_{size}");
-        assert!(en.contains_key(&key), "{key} is missing from en.json");
+        assert!(en.contains_key(&key), "{key} is missing");
     }
 }
 
@@ -138,15 +152,17 @@ fn every_engine_error_has_a_string() {
     }
 }
 
-/// Theme and accent names come from the vendored themes.json, in both
-/// languages: a copy here would be a second source to drift from it.
+/// The shared strings come from the vendored themes.json, in both languages: a
+/// copy here would be a second source to drift from it.
 #[test]
-fn theme_and_accent_names_are_not_redefined() {
-    for key in table(EN).keys() {
-        let theme_name = key.starts_with("settings_theme_") && key != "settings_theme_desc";
-        assert!(
-            !theme_name && !key.starts_with("settings_accent_"),
-            "{key} belongs to themes.json"
-        );
+fn shared_labels_are_not_redefined() {
+    let shared = shared_english();
+    for (name, json) in [("en", EN), ("fr", FR)] {
+        for key in table(json).keys() {
+            assert!(
+                !shared.contains_key(key),
+                "{name}.json redefines {key}, which belongs to themes.json"
+            );
+        }
     }
 }
