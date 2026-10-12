@@ -64,8 +64,8 @@ accessibility settings, and it contains no network code.
   more than 256 levels deep.
 - **Keyboard:** digits, `+ - * /`, `%`, `.` or `,` for the decimal point,
   Enter for `=`, Backspace, and Delete or Escape to clear, in both layouts.
-- **Preferences**, opened and closed by clicking the orCAL name at the top of
-  the window, and saved as soon as they change:
+- **Preferences**, opened and closed by clicking the orCAL name at the top left
+  of the window, and saved as soon as they change:
   - General: English or French (or the system language), and the layout orCAL
     opens in.
   - Appearance: every Colony theme, an accent colour, the text size and
@@ -231,7 +231,7 @@ roaming) application folders:
 
 | Data | Stored or sent | Where, and why |
 |---|---|---|
-| Preferences | stored | `preferences/preferences.json` in the settings folder: theme, accent, text size, accessibility, language and startup layout, saved as soon as they change. A file orCAL cannot read is kept as `preferences.json.bak` and orCAL starts from the defaults |
+| Preferences | stored | `preferences/preferences.json` in the settings folder: theme, accent, text size, accessibility, language and startup layout, saved as soon as they change. A setting with a bad value falls back to its default. A file that orCAL reads but that is not a JSON object is moved to `preferences.json.bak` and orCAL starts from the defaults. A file it cannot read (permissions, a lock) or cannot move aside is left untouched: orCAL starts from the defaults and saves nothing over it until the next launch |
 | Window position | stored | `window-position.json` in the settings folder, so the window opens where you left it. On Wayland the compositor decides where windows open |
 | Web view profile | stored | the web view's own storage and cache, in `webview/` in the data folder on Linux and Windows, and in the system's WebKit location on macOS. orCAL keeps nothing of its own there once the old theme below has been imported |
 | Expressions and results | neither | kept only in the open window, gone when you close it |
