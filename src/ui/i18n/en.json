@@ -41,6 +41,7 @@
   "preferences_about_config": "Preferences folder",
   "preferences_about_data": "Data folder",
   "preferences_about_cache": "Cache folder",
+  "preferences_about_unavailable": "Unavailable",
   "preferences_about_fonts": "Fonts",
   "preferences_about_fonts_desc": "JetBrains Mono Nerd Font and OpenDyslexic, under the SIL Open Font License 1.1.",
   "preferences_toast_dismiss": "Dismiss"

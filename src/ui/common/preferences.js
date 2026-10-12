@@ -439,9 +439,8 @@ const aboutRow = (titleKey, value) =>
 
 const about = () => {
   const rows = h("div", { class: "about-rows" });
-  const fill = (info) => {
-    // Empty while the desktop app answers; the note only outside it.
-    const unknown = invoke ? "" : t("desktop_only");
+  // `unknown` stands in for what `info` lacks.
+  const fill = (info, unknown) => {
     rows.replaceChildren(
       aboutRow("preferences_about_version", info?.version ?? unknown),
       aboutRow("preferences_about_license", info?.license ?? unknown),
@@ -451,8 +450,15 @@ const about = () => {
       aboutRow("preferences_about_fonts", t("preferences_about_fonts_desc")),
     );
   };
-  fill(null);
-  invoke?.("get_app_info").then(fill, (error) => console.warn("orCAL app info", error));
+  // Empty while the desktop app answers; the note only outside it.
+  fill(null, invoke ? "" : t("desktop_only"));
+  invoke?.("get_app_info").then(
+    (info) => fill(info, t("preferences_about_unavailable")),
+    (error) => {
+      console.warn("orCAL app info", error);
+      fill(null, t("preferences_about_unavailable"));
+    },
+  );
   return [
     h("h2", { class: "pref-heading" }, "orCAL"),
     h("p", { class: "pref-heading-desc" }, t("preferences_about_desc")),
