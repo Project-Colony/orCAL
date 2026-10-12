@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/Project-Colony/orCAL/compare/v0.4.0...v0.4.1) (2026-10-12)
+
+
+### Fixes
+
+* keep the webview profile in the cache folder and the Preferences categories on the left in the phone layout ([#49](https://github.com/Project-Colony/orCAL/issues/49)) ([a92468f](https://github.com/Project-Colony/orCAL/commit/a92468f20753952179c089e6a621b31f8fd91535))
+
 ## [0.4.0](https://github.com/Project-Colony/orCAL/compare/v0.3.1...v0.4.0) (2026-10-12)
 
 
