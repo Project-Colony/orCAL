@@ -465,3 +465,8 @@ html {
     height: min(720px, 92vh);
   }
 }
+
+/* Hidden until the saved preferences are applied (common/prefs.js). */
+html[data-loading] {
+  visibility: hidden;
+}

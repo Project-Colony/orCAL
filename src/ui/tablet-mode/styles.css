@@ -568,3 +568,8 @@ html {
     --keypad-columns: 5;
   }
 }
+
+/* Hidden until the saved preferences are applied (common/prefs.js). */
+html[data-loading] {
+  visibility: hidden;
+}

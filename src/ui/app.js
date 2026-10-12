@@ -1,7 +1,3 @@
-const themeState = {
-  value: localStorage.getItem("orcal-theme") || "latte",
-};
-
 const root = document.documentElement;
 const toggleButton = document.querySelector(".theme-toggle-button");
 const toggleLabel = document.querySelector(".theme-toggle-label");
@@ -127,10 +123,13 @@ const disableInterface = () => {
   });
 };
 
+const isDarkTheme = () => orcalPreferences.current.selected_variant === "mocha";
+
 const applyTheme = () => {
-  root.dataset.theme = themeState.value;
-  toggleButton.setAttribute("aria-pressed", themeState.value === "mocha");
-  toggleLabel.textContent = themeState.value === "mocha" ? "Mocha" : "Latte";
+  const dark = isDarkTheme();
+  root.dataset.theme = dark ? "mocha" : "latte";
+  toggleButton.setAttribute("aria-pressed", dark);
+  toggleLabel.textContent = dark ? "Mocha" : "Latte";
 };
 
 const updateScreen = () => {
@@ -322,9 +321,11 @@ document.addEventListener("keydown", async (event) => {
 updateStatusTime();
 setInterval(updateStatusTime, 60_000);
 
-toggleButton.addEventListener("click", () => {
-  themeState.value = themeState.value === "mocha" ? "latte" : "mocha";
-  localStorage.setItem("orcal-theme", themeState.value);
+toggleButton.addEventListener("click", async () => {
+  await orcalPreferences.update({
+    selected_theme: "catppuccin",
+    selected_variant: isDarkTheme() ? "latte" : "mocha",
+  });
   applyTheme();
 });
 
@@ -398,6 +399,11 @@ if (dragRegion) {
 }
 
 renderKeys();
-applyTheme();
 updateScreen();
+// The page stays hidden until the saved theme is on, so it never flashes the
+// default one.
+orcalPreferences
+  .load()
+  .then(applyTheme)
+  .finally(() => delete root.dataset.loading);
 updateBatteryButton();
