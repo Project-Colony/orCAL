@@ -64,6 +64,12 @@ jobs:
       - name: Build
         run: cargo build
 
+      # The release workflow smoke-tests every artifact with --version; a
+      # binary that stopped answering it fails here instead of at release time.
+      - name: Answer --version
+        shell: bash
+        run: ./target/debug/orCAL --version
+
       # Same check as the release workflow's Windows leg: SignPath signs only
       # an .exe whose version resource names the project and carries its
       # version, and tauri-build is what writes it.
