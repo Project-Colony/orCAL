@@ -1,9 +1,8 @@
 /*
  * The Preferences page (common/preferences.js), after colony-ui's preferences
- * kit: a header, the category list, the selected category's sections.
- * Category list on the left in the tablet layout, above the content in the
- * phone one. Every label may wrap: French runs longer, and text goes up to
- * 1.68 times its base size.
+ * kit: a header, the category list on the left, the selected category's
+ * sections on the right. Every label may wrap: French runs longer, and text
+ * goes up to 1.68 times its base size.
  */
 
 .preferences {
@@ -94,32 +93,22 @@
   padding-right: 4px;
 }
 
-/* Phone: the categories above the content, wrapping, scrolling with it. */
+/*
+ * Phone: the same two columns in a 360px window, with a narrower list that
+ * still grows with the text scale up to 40% of the width. Long names break
+ * across lines (hyphenated where the web view can) instead of squeezing the
+ * content further.
+ */
 .calculator-phone-frame .preferences-body {
-  flex-direction: column;
   gap: 10px;
-  overflow-y: auto;
-}
-
-.calculator-phone-frame .preferences-content {
-  flex: none;
-  overflow: visible;
 }
 
 .calculator-phone-frame .preferences-nav {
-  flex: none;
-  max-width: none;
-  flex-direction: row;
-  flex-wrap: wrap;
-  overflow: visible;
+  flex-basis: calc(112px * var(--font-scale));
 }
 
 .calculator-phone-frame .pref-category {
-  padding: 6px 10px;
-}
-
-.calculator-phone-frame .preferences-title {
-  font-size: calc(20px * var(--font-scale));
+  hyphens: auto;
 }
 
 .pref-heading {

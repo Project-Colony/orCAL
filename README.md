@@ -150,8 +150,10 @@ French strings complete.
 - `src/preferences.rs`: `preferences.json` and the commands that read and
   write it
 - `src/paths.rs`: the Colony folder layout
-- `src/window_state.rs`: remembers the window position between runs
+- `src/window_state.rs`: opens the main window on the chosen layout and
+  remembers its position between runs
 - `src/migrate.rs`: copies the settings of versions before the Colony layout
+  and opens the preferences store
 - `src/linux_display.rs`: turns off WebKitGTK's DMA-BUF renderer and
   accelerated compositing under Wayland, where they fail on some drivers
 - `src/i18n.rs`: tests that hold the two locale files to the same keys
@@ -233,21 +235,24 @@ roaming) application folders:
 |---|---|---|
 | Preferences | stored | `preferences/preferences.json` in the settings folder: theme, accent, text size, accessibility, language and startup layout, saved as soon as they change. A setting with a bad value falls back to its default; a theme orCAL does not ship becomes Gruvbox dark, Colony's fallback, and an unknown accent becomes the theme's own. A file that orCAL reads but that is not a JSON object is moved to `preferences.json.bak` and orCAL starts from the defaults. A file it cannot read (permissions, a lock) or cannot move aside is left untouched: orCAL starts from the defaults and saves nothing over it until the next launch |
 | Window position | stored | `window-position.json` in the settings folder, so the window opens where you left it. On Wayland the compositor decides where windows open |
-| Web view profile | stored | the web view's own storage and cache, in `webview/` in the data folder on Linux and Windows, and in the system's WebKit location on macOS. orCAL keeps nothing of its own there once the old theme below has been imported |
+| Migration marker | stored | `.migrated` in the settings folder, written by the first launch of a version with the Colony layout. It records where the settings of older versions were looked for, so the copy below runs only once |
+| Web view profile | stored | the web view's own storage and cache. orCAL keeps nothing of its own there once the old theme below has been imported, so it is cache: `webview/` in the cache folder on Linux and Windows. On macOS, where the web view cannot be given a folder, it uses a non-persistent store kept in memory instead of the system's WebKit folder |
 | Expressions and results | neither | kept only in the open window, gone when you close it |
 
 | Folder | Linux | Windows | macOS |
 |---|---|---|---|
 | Settings | `~/.config/Colony/orCAL/` | `%LOCALAPPDATA%\Colony\orCAL\` | `~/Library/Application Support/Colony/orCAL/` |
-| Data | `~/.local/share/Colony/orCAL/` | `%LOCALAPPDATA%\Colony\orCAL\` | `~/Library/Application Support/Colony/orCAL/` |
+| Data (not used) | `~/.local/share/Colony/orCAL/` | `%LOCALAPPDATA%\Colony\orCAL\` | `~/Library/Application Support/Colony/orCAL/` |
+| Cache | `~/.cache/Colony/orCAL/` | `%LOCALAPPDATA%\Colony\orCAL\cache\` | `~/Library/Caches/Colony/orCAL/` (not used) |
 
 Preferences > About shows the exact folders on your machine.
 
 Versions before the Colony layout kept these in `com.orcal.app` folders. The
 first launch of a newer version copies the window position over and imports
 the theme from the old web view storage; the launch after that switches to the
-new web view folder. The old `com.orcal.app` folders are left in place and can
-be deleted by hand.
+new web view profile. The old `com.orcal.app` folders are left in place and can
+be deleted by hand, and so can the `webview/` folder that 0.4.0 kept in the
+data folder on Linux and Windows.
 
 The interface is drawn by the operating system's web view (Microsoft Edge
 WebView2 on Windows, WebKit on macOS and Linux), which follows its vendor's own

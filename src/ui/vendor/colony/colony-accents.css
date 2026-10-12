@@ -4,6 +4,9 @@
  *
  * Palette-independent. Load alongside a theme; "auto" means no override,
  * i.e. keep the theme's own --colony-accent-blue.
+ *
+ * --colony-ink and --colony-paper are the label colours for text drawn on an
+ * accent: use whichever contrasts more, as colony-ui's contrast_on() does.
  */
 :root {
   --colony-accent-red: #e05555;
@@ -14,4 +17,6 @@
   --colony-accent-indigo: #7b6bd6;
   --colony-accent-violet: #b06bd6;
   --colony-accent-amber: #d4a030;
+  --colony-ink: #14141a;
+  --colony-paper: #f7faff;
 }

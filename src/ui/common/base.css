@@ -43,13 +43,14 @@
  * goes on <body> (common/theme.js), not on <html>: the "blue" override is read
  * here, where no theme hides it.
  *
- * --ink and --paper are colony-ui's contrast_on() ends: the near-black and
- * near-white a label takes on a coloured fill, whichever contrasts more.
+ * --ink and --paper are colony-ui's contrast_on() ends, which colony-accents.css
+ * also sets: the near-black and near-white a label takes on a coloured fill,
+ * whichever contrasts more.
  */
 :root {
   --accent-override-blue: var(--colony-accent-blue);
-  --ink: color(srgb 0.08 0.08 0.1);
-  --paper: color(srgb 0.97 0.98 1);
+  --ink: var(--colony-ink);
+  --paper: var(--colony-paper);
   width: 100%;
   height: 100%;
   background: transparent;

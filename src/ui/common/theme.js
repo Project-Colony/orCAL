@@ -32,9 +32,11 @@ const parseHex = (text) => {
   return hex ? [0, 2, 4].map((i) => Number.parseInt(hex.slice(i, i + 2), 16) / 255) : null;
 };
 
-// colony-ui's contrast_on() ends, as in base.css (--ink and --paper).
-const INK = [0.08, 0.08, 0.1];
-const PAPER = [0.97, 0.98, 1];
+/** colony-ui's contrast_on() ends, which colony-accents.css sets on :root. */
+const contrastEnds = () => {
+  const root = getComputedStyle(document.documentElement);
+  return ["--colony-ink", "--colony-paper"].map((name) => parseHex(root.getPropertyValue(name)));
+};
 
 /**
  * "ink" or "paper": whichever of colony-ui's two label colours contrasts more
@@ -42,7 +44,8 @@ const PAPER = [0.97, 0.98, 1];
  */
 export const contrastOn = (color) => {
   const rgb = parseHex(color);
-  return rgb && contrast(INK, rgb) >= contrast(PAPER, rgb) ? "ink" : "paper";
+  const [ink, paper] = contrastEnds();
+  return rgb && ink && paper && contrast(ink, rgb) >= contrast(paper, rgb) ? "ink" : "paper";
 };
 
 /** Whether `color` is a light surface, by YIQ luminance as colony-ui reads it. */
