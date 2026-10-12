@@ -153,6 +153,7 @@ French strings complete.
 - `src/window_state.rs`: opens the main window on the chosen layout and
   remembers its position between runs
 - `src/migrate.rs`: copies the settings of versions before the Colony layout
+  and opens the preferences store
 - `src/linux_display.rs`: turns off WebKitGTK's DMA-BUF renderer and
   accelerated compositing under Wayland, where they fail on some drivers
 - `src/i18n.rs`: tests that hold the two locale files to the same keys
@@ -241,7 +242,8 @@ roaming) application folders:
 | Folder | Linux | Windows | macOS |
 |---|---|---|---|
 | Settings | `~/.config/Colony/orCAL/` | `%LOCALAPPDATA%\Colony\orCAL\` | `~/Library/Application Support/Colony/orCAL/` |
-| Cache | `~/.cache/Colony/orCAL/` | `%LOCALAPPDATA%\Colony\orCAL\cache\` | not used |
+| Data (not used) | `~/.local/share/Colony/orCAL/` | `%LOCALAPPDATA%\Colony\orCAL\` | `~/Library/Application Support/Colony/orCAL/` |
+| Cache | `~/.cache/Colony/orCAL/` | `%LOCALAPPDATA%\Colony\orCAL\cache\` | `~/Library/Caches/Colony/orCAL/` (not used) |
 
 Preferences > About shows the exact folders on your machine.
 
@@ -250,8 +252,7 @@ first launch of a newer version copies the window position over and imports
 the theme from the old web view storage; the launch after that switches to the
 new web view profile. The old `com.orcal.app` folders are left in place and can
 be deleted by hand, and so can the `webview/` folder that 0.4.0 kept in the
-data folder (`~/.local/share/Colony/orCAL/` on Linux,
-`%LOCALAPPDATA%\Colony\orCAL\` on Windows).
+data folder on Linux and Windows.
 
 The interface is drawn by the operating system's web view (Microsoft Edge
 WebView2 on Windows, WebKit on macOS and Linux), which follows its vendor's own

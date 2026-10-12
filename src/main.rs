@@ -11,7 +11,6 @@ mod paths;
 mod preferences;
 mod window_state;
 
-use preferences::Store;
 use tauri::Manager;
 
 fn main() {
@@ -30,24 +29,10 @@ fn main() {
             let config_dir = paths::config_dir()
                 .inspect_err(|error| log::warn!("orCAL cannot keep its settings: {error}"))
                 .ok();
-            let legacy_dir = migrate::legacy_config_dir();
-            if let (Some(config), Some(legacy)) = (&config_dir, &legacy_dir) {
-                if let Err(error) = migrate::run(legacy, config) {
-                    log::warn!("settings from before the Colony layout not copied: {error}");
-                }
-            }
-
-            let store = Store::open(config_dir.as_deref().map(preferences::file_in));
-            let mut preferences = store.get();
-            // Every build before the Colony layout created its config folder on
-            // first launch, so without one there is no old webview profile and
-            // no theme in it to import: start on the new profile straight away.
-            if !preferences.legacy_storage_imported && legacy_dir.is_some_and(|dir| !dir.exists()) {
-                preferences.legacy_storage_imported = true;
-                if let Err(error) = store.set(preferences.clone()) {
-                    log::warn!("preferences not saved: {error}");
-                }
-            }
+            let (store, preferences) = migrate::open_store(
+                config_dir.as_deref(),
+                migrate::legacy_config_dir().as_deref(),
+            );
             app.manage(store);
 
             let window = window_state::open_main_window(app, &preferences)?;

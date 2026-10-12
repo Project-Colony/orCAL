@@ -13,6 +13,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use crate::preferences::{self, Preferences, Store};
 use crate::{paths, window_state};
 
 /// Tauri's bundle identifier, the folder name of the pre-Colony layout.
@@ -47,6 +48,30 @@ pub fn run(legacy: &Path, config: &Path) -> io::Result<()> {
             legacy.display()
         ),
     )
+}
+
+/// Bring over what the pre-Colony builds kept in `legacy`, then open the
+/// preferences store in `config` (`None`: settings last for the session). The
+/// preferences returned are the ones to open the window on.
+pub fn open_store(config: Option<&Path>, legacy: Option<&Path>) -> (Store, Preferences) {
+    if let (Some(config), Some(legacy)) = (config, legacy) {
+        if let Err(error) = run(legacy, config) {
+            log::warn!("settings from before the Colony layout not copied: {error}");
+        }
+    }
+
+    let store = Store::open(config.map(preferences::file_in));
+    let mut preferences = store.get();
+    // Every build before the Colony layout created its config folder on first
+    // launch, so without one there is no old webview profile and no theme in
+    // it to import: start on the new profile straight away.
+    if !preferences.legacy_storage_imported && legacy.is_some_and(|dir| !dir.exists()) {
+        preferences.legacy_storage_imported = true;
+        if let Err(error) = store.set(preferences.clone()) {
+            log::warn!("preferences not saved: {error}");
+        }
+    }
+    (store, preferences)
 }
 
 #[cfg(test)]
@@ -124,6 +149,24 @@ mod tests {
         assert!(run(&legacy, &config).is_err());
         assert!(!config.join(MARKER).exists());
         assert!(legacy.join("orcal").join(window_state::FILE).exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn the_old_profile_is_kept_only_while_an_old_folder_exists() {
+        let root = temp_dir("migrate-store");
+        let config = root.join("new");
+        fs::create_dir_all(&config).unwrap();
+
+        let legacy = root.join(LEGACY_IDENTIFIER);
+        fs::create_dir_all(&legacy).unwrap();
+        let (_, preferences) = open_store(Some(&config), Some(&legacy));
+        assert!(!preferences.legacy_storage_imported);
+
+        fs::remove_dir_all(&legacy).unwrap();
+        let (store, preferences) = open_store(Some(&config), Some(&legacy));
+        assert!(preferences.legacy_storage_imported);
+        assert!(store.get().legacy_storage_imported);
         fs::remove_dir_all(root).unwrap();
     }
 }
