@@ -12,7 +12,7 @@ mod preferences;
 mod window_state;
 
 use preferences::{Preferences, Store};
-use tauri::{App, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::{App, LogicalSize, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 fn main() {
     // Before anything else, and without opening a window: the release
@@ -90,7 +90,15 @@ fn open_main_window(app: &App, preferences: &Preferences) -> tauri::Result<Webvi
             Err(error) => log::warn!("the webview keeps its default profile: {error}"),
         }
     }
-    builder.build()
+    let window = builder.build()?;
+    // X11 (XWayland) window managers only see a 10x10 size hint from the
+    // builder, so floating window managers such as Hyprland pick their own
+    // size; asking again once the window exists gives the layout's size.
+    let (width, height) = layout.size();
+    if let Err(error) = window.set_size(LogicalSize::new(width, height)) {
+        log::warn!("the window keeps the size the window manager chose: {error}");
+    }
+    Ok(window)
 }
 
 /// Whether the command line, without the program name, asks for the version.

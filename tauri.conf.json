@@ -34,9 +34,9 @@
         "title": "orCAL",
         "width": 360,
         "height": 720,
-        "resizable": true,
+        "resizable": false,
         "maximizable": false,
-        "transparent": true,
+        "transparent": false,
         "decorations": false,
         "shadow": false,
         "useHttpsScheme": true

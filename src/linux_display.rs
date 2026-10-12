@@ -1,7 +1,7 @@
 //! Display backend workaround for WebKitGTK under Wayland.
 
-/// On Wayland, WebKitGTK with transparency can cause protocol errors and GBM
-/// buffer failures. Force the X11 backend through XWayland and disable
+/// On Wayland, WebKitGTK can hit protocol errors and GBM buffer failures
+/// (seen with NVIDIA drivers). Force the X11 backend through XWayland and disable
 /// GPU-accelerated compositing to ensure reliable rendering.
 ///
 /// Call it first thing in `main`, before any thread exists: it sets
