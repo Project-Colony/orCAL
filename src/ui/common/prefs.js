@@ -3,8 +3,9 @@
 //
 // Builds before 0.4 kept the theme in the webview's localStorage. The first
 // launch after upgrading still opens that old webview profile, imports the
-// theme here once, and from the next launch orCAL uses a fresh profile under
-// Colony/orCAL (src/main.rs). localStorage is not used for anything else.
+// theme here once, and from the next launch orCAL uses a fresh profile in its
+// cache folder, or in memory on macOS (src/window_state.rs). localStorage is
+// not used for anything else.
 
 const invoke = window.__TAURI__?.core?.invoke ?? null;
 

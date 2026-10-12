@@ -86,13 +86,13 @@ pub mod locate {
         under(dirs::config_local_dir(), "config", PROGRAM)
     }
 
-    /// What orCAL produced: the webview profile.
+    /// What orCAL produced and could not re-derive. It keeps nothing there
+    /// yet; the About page still shows where it would go.
     pub fn data_dir() -> io::Result<PathBuf> {
         under(dirs::data_local_dir(), "data", PROGRAM)
     }
 
-    /// What can be rebuilt. orCAL keeps nothing there yet; the About page
-    /// still shows where it would go.
+    /// What can be rebuilt: the webview profile.
     pub fn cache_dir() -> io::Result<PathBuf> {
         Ok(cache_in(
             under(dirs::cache_dir(), "cache", PROGRAM)?,
@@ -108,9 +108,9 @@ pub fn config_dir() -> io::Result<PathBuf> {
     Ok(dir)
 }
 
-/// [`locate::data_dir`], created if missing.
-pub fn data_dir() -> io::Result<PathBuf> {
-    let dir = locate::data_dir()?;
+/// [`locate::cache_dir`], created if missing.
+pub fn cache_dir() -> io::Result<PathBuf> {
+    let dir = locate::cache_dir()?;
     fs::create_dir_all(&dir)?;
     Ok(dir)
 }
