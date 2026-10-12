@@ -1,0 +1,437 @@
+/*
+ * The Preferences page (common/preferences.js), after colony-ui's preferences
+ * kit: a header, the category list, the selected category's sections.
+ * Category list on the left in the tablet layout, above the content in the
+ * phone one. Every label may wrap: French runs longer, and text goes up to
+ * 1.68 times its base size.
+ */
+
+.preferences {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preferences-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+/* As wide as the word, else Close goes to the next line. */
+.preferences-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: break-word;
+  font-size: calc(22px * var(--font-scale));
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.preferences-close {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  background: var(--colony-btn-default);
+  color: var(--text-muted);
+  font-size: calc(13px * var(--font-scale));
+  cursor: pointer;
+}
+
+.preferences-close:hover {
+  background: var(--colony-btn-hover);
+  color: var(--text-primary);
+}
+
+.preferences-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 16px;
+}
+
+.preferences-nav {
+  flex: 0 0 calc(180px * var(--font-scale));
+  max-width: 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.pref-category {
+  min-width: 0;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: calc(13px * var(--font-scale));
+  font-weight: 500;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: background-color var(--theme-transition), color var(--theme-transition);
+}
+
+.pref-category:hover {
+  background: var(--colony-bg-card-hover);
+}
+
+.pref-category[aria-current="page"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.preferences-content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Phone: the categories above the content, wrapping, scrolling with it. */
+.calculator-phone-frame .preferences-body {
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.calculator-phone-frame .preferences-content {
+  flex: none;
+  overflow: visible;
+}
+
+.calculator-phone-frame .preferences-nav {
+  flex: none;
+  max-width: none;
+  flex-direction: row;
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.calculator-phone-frame .pref-category {
+  padding: 6px 10px;
+}
+
+.calculator-phone-frame .preferences-title {
+  font-size: calc(20px * var(--font-scale));
+}
+
+.pref-heading {
+  margin: 0;
+  font-size: calc(18px * var(--font-scale));
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pref-heading-desc {
+  margin: 4px 0 12px;
+  font-size: calc(12px * var(--font-scale));
+  color: var(--text-muted);
+}
+
+.pref-section {
+  border-top: 1px solid var(--divider);
+}
+
+/* Flat: no box, the whole row toggles. */
+.pref-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  padding: 10px 2px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: calc(15px * var(--font-scale));
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pref-section-title {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pref-chevron {
+  flex: none;
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-dimmer);
+}
+
+.pref-section-body {
+  padding: 0 2px 12px;
+}
+
+.pref-section-desc {
+  margin: 0 0 8px;
+  font-size: calc(12px * var(--font-scale));
+  color: var(--text-muted);
+}
+
+.pref-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 6px 0;
+}
+
+.pref-row-text {
+  flex: 1 1 12em;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pref-row-title {
+  font-size: calc(13px * var(--font-scale));
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.pref-row-desc {
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-dimmer);
+  overflow-wrap: anywhere;
+}
+
+.pref-value {
+  font-size: calc(12px * var(--font-scale));
+  color: var(--text-secondary);
+}
+
+.pref-path {
+  color: var(--text-secondary);
+  user-select: text;
+}
+
+.pref-select {
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: var(--colony-bg-input);
+  color: var(--text-primary);
+  font-size: calc(12px * var(--font-scale));
+  cursor: pointer;
+}
+
+/* An on/off switch, after colony-ui's functional_toggle. */
+.pref-switch {
+  flex: none;
+  position: relative;
+  width: calc(36px * var(--font-scale));
+  height: calc(20px * var(--font-scale));
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0;
+  background: var(--colony-btn-default);
+  cursor: pointer;
+  transition: background-color var(--button-transition);
+}
+
+.pref-switch-knob {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: calc(14px * var(--font-scale));
+  height: calc(14px * var(--font-scale));
+  border-radius: 50%;
+  background: var(--text-muted);
+  transform: translateY(-50%);
+  transition: left var(--button-transition), background-color var(--button-transition);
+}
+
+.pref-switch[aria-checked="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.pref-switch[aria-checked="true"] .pref-switch-knob {
+  left: calc(100% - 2px - 14px * var(--font-scale));
+  background: var(--on-accent);
+}
+
+/* Theme picker: a row per family, a card per variant. */
+.theme-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.theme-family-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: calc(13px * var(--font-scale));
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Nerd Font icons draw wider than their advance. */
+.theme-family-name .glyph {
+  flex: none;
+  width: 1.5em;
+  text-align: center;
+}
+
+.theme-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.theme-card {
+  position: relative;
+  width: calc(96px * var(--font-scale));
+  min-height: calc(56px * var(--font-scale));
+  max-width: 100%;
+  display: flex;
+  align-items: flex-end;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  overflow: hidden;
+  background: var(--swatch-bg);
+  color: var(--paper);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme-card[data-on="ink"] {
+  color: var(--ink);
+}
+
+.theme-card-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40%;
+  height: 4px;
+  background: var(--swatch-accent);
+}
+
+.theme-card-name {
+  position: relative;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.theme-card-check {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  display: none;
+}
+
+.theme-card[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.theme-card[aria-pressed="true"] .theme-card-check {
+  display: inline;
+}
+
+/* Accent picker: eight filled circles. */
+.accent-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.accent-swatch {
+  width: calc(28px * var(--font-scale));
+  height: calc(28px * var(--font-scale));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  padding: 0;
+  background: var(--swatch);
+  color: var(--paper);
+  font-size: calc(13px * var(--font-scale));
+  cursor: pointer;
+}
+
+.accent-swatch[data-on="ink"] {
+  color: var(--ink);
+}
+
+.accent-swatch .glyph {
+  visibility: hidden;
+}
+
+.accent-swatch[aria-pressed="true"] .glyph {
+  visibility: visible;
+}
+
+/* Preview: drawn with the live palette, accent, font and size. */
+.preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--colony-bg-card);
+}
+
+.preview-title {
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.preview-body {
+  font-size: calc(12px * var(--font-scale));
+  color: var(--text-secondary);
+}
+
+.preview-summary {
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-muted);
+}
+
+.preview-button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 500;
+}
+
+.preview-keys {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.preview-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(40px * var(--font-scale));
+  border-radius: 14px;
+  font-size: calc(18px * var(--font-scale));
+  pointer-events: none;
+}

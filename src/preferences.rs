@@ -7,18 +7,59 @@
 //! Loading never fails: a field with a bad value falls back to its default and
 //! the rest of the file is kept, unknown fields are ignored, and a file that is
 //! not a JSON object at all is set aside as `preferences.json.bak` rather than
-//! overwritten by the next save.
+//! overwritten by the next save. A theme the vendored Colony catalog does not
+//! have becomes Gruvbox dark, Colony's fallback, and an unknown accent the
+//! theme's own.
 
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 use serde::de::{DeserializeOwned, Deserializer};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 use crate::paths;
+
+/// Colony's theme for a value it does not know (colony-ui's `FALLBACK_PALETTE`).
+const FALLBACK_THEME: (&str, &str) = ("gruvbox", "dark");
+
+/// The themes and accents the interface ships, from the vendored
+/// `themes.json` (scripts/sync-colony-tokens.sh).
+#[derive(Deserialize)]
+struct Catalog {
+    families: Vec<Family>,
+    accents: Vec<Keyed>,
+}
+
+#[derive(Deserialize)]
+struct Family {
+    key: String,
+    variants: Vec<Keyed>,
+}
+
+#[derive(Deserialize)]
+struct Keyed {
+    key: String,
+}
+
+static CATALOG: LazyLock<Catalog> = LazyLock::new(|| {
+    serde_json::from_str(include_str!("ui/vendor/colony/themes.json"))
+        .expect("the vendored themes.json is Colony's generated catalog")
+});
+
+impl Catalog {
+    fn has_theme(&self, family: &str, variant: &str) -> bool {
+        self.families
+            .iter()
+            .any(|f| f.key == family && f.variants.iter().any(|v| v.key == variant))
+    }
+
+    fn has_accent(&self, key: &str) -> bool {
+        self.accents.iter().any(|a| a.key == key)
+    }
+}
 
 /// Appearance → Typography → Text size.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -155,6 +196,17 @@ impl Preferences {
             "legacy_storage_imported",
             &mut p.legacy_storage_imported,
         );
+
+        if !CATALOG.has_theme(&p.selected_theme, &p.selected_variant) {
+            p.selected_theme = FALLBACK_THEME.0.to_string();
+            p.selected_variant = FALLBACK_THEME.1.to_string();
+        }
+        if p.selected_accent
+            .as_deref()
+            .is_some_and(|key| !CATALOG.has_accent(key))
+        {
+            p.selected_accent = None;
+        }
         p
     }
 }
@@ -345,6 +397,69 @@ mod tests {
         assert!(!p.legacy_storage_imported);
         assert!(!p.animations && p.reduce_motion);
         assert_eq!(parse("[1, 2]"), d);
+    }
+
+    #[test]
+    fn an_unknown_theme_falls_back_to_gruvbox_dark() {
+        for json in [
+            r#"{"selected_theme": "solarised", "selected_variant": "dark"}"#,
+            r#"{"selected_theme": "catppuccin", "selected_variant": "dark"}"#,
+            r#"{"selected_theme": "nord"}"#,
+        ] {
+            let p = parse(json);
+            assert_eq!(
+                (p.selected_theme.as_str(), p.selected_variant.as_str()),
+                FALLBACK_THEME,
+                "{json}"
+            );
+        }
+        let p = parse(r#"{"selected_theme": "stellar_blade", "selected_variant": "lily"}"#);
+        assert_eq!(
+            (p.selected_theme.as_str(), p.selected_variant.as_str()),
+            ("stellar_blade", "lily")
+        );
+    }
+
+    #[test]
+    fn an_unknown_accent_is_the_themes_own() {
+        assert_eq!(
+            parse(r#"{"selected_accent": "teal"}"#).selected_accent,
+            None
+        );
+        assert_eq!(
+            parse(r#"{"selected_accent": "amber"}"#)
+                .selected_accent
+                .as_deref(),
+            Some("amber")
+        );
+    }
+
+    #[test]
+    fn the_defaults_and_the_fallback_are_in_the_catalog() {
+        let d = Preferences::default();
+        assert!(CATALOG.has_theme(&d.selected_theme, &d.selected_variant));
+        assert!(CATALOG.has_theme(FALLBACK_THEME.0, FALLBACK_THEME.1));
+        assert_eq!(CATALOG.accents.len(), 8);
+    }
+
+    /// common/theme.js selects a theme as `<family with - for _>-<variant>`,
+    /// which must be the slug colony-themes.css styles.
+    #[test]
+    fn every_theme_is_styled_under_the_slug_the_interface_uses() {
+        let css = include_str!("ui/vendor/colony/colony-themes.css");
+        let json: Value =
+            serde_json::from_str(include_str!("ui/vendor/colony/themes.json")).unwrap();
+        for family in json["families"].as_array().unwrap() {
+            for variant in family["variants"].as_array().unwrap() {
+                let slug = format!(
+                    "{}-{}",
+                    family["key"].as_str().unwrap().replace('_', "-"),
+                    variant["key"].as_str().unwrap()
+                );
+                assert_eq!(variant["slug"], slug.as_str());
+                assert!(css.contains(&format!("[data-colony-theme=\"{slug}\"]")));
+            }
+        }
     }
 
     #[test]

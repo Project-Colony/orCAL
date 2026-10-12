@@ -3,57 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>orCAL - Calculator</title>
+    <title>orCAL</title>
+    <link rel="stylesheet" href="vendor/colony/colony-accents.css" />
+    <link rel="stylesheet" href="vendor/colony/colony-themes.css" />
+    <link rel="stylesheet" href="common/base.css" />
+    <link rel="stylesheet" href="common/preferences.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="calculator-app">
-      <section class="calculator-phone-frame">
+      <section class="calculator-frame calculator-phone-frame">
         <div class="drag-region" data-tauri-drag-region aria-hidden="true"></div>
         <header class="calculator-status" data-tauri-drag-region>
           <div class="status">
             <div class="status-time" aria-live="polite">--:--</div>
-            <div class="status-icons" aria-label="Connection status">
+            <div class="status-icons" role="group" data-i18n-aria-label="window_controls">
               <button
-                class="status-icon status-icon-button"
+                class="status-icon-button glyph"
                 type="button"
-                data-action="switch-tablet"
-                aria-label="Switch to tablet mode"
-                title="Switch to tablet mode"
-              >
-                📶
-              </button>
+                data-action="switch-layout"
+                data-layout="tablet"
+                data-i18n-aria-label="layout_switch_tablet"
+                data-i18n-title="layout_switch_tablet"
+              >&#xf04f6;</button>
               <button
-                class="status-icon status-icon-button"
+                class="status-icon-button glyph"
                 type="button"
                 data-action="minimize"
-                aria-label="Minimize"
-              >
-                📡
-              </button>
+                data-i18n-aria-label="window_minimize"
+                data-i18n-title="window_minimize"
+              >&#xf05b0;</button>
               <button
-                class="status-icon status-icon-button"
+                class="status-icon-button glyph"
                 type="button"
-                data-action="battery"
-                aria-label="Battery 100%"
-              >
-                🔋
-              </button>
+                data-action="close"
+                data-i18n-aria-label="window_close"
+                data-i18n-title="window_close"
+              >&#xf0156;</button>
             </div>
           </div>
           <div class="status-message" role="status" aria-live="polite"></div>
-          <div class="status-brand">orCAL</div>
+          <button class="status-brand" type="button" data-i18n-title="settings_title">
+            orCAL<span class="glyph" aria-hidden="true">&#xf013;</span>
+          </button>
         </header>
 
-        <div class="theme-toggle" role="group" aria-label="Change theme">
-          <button class="theme-toggle-button" type="button" aria-pressed="false">
-            <span class="theme-toggle-icon" aria-hidden="true">☀️</span>
-            <span class="theme-toggle-label" aria-live="polite">Latte</span>
-            <span class="theme-toggle-icon" aria-hidden="true">🌙</span>
-          </button>
-        </div>
-
-        <section class="calculator-screen" aria-live="polite">
+        <section class="calculator-screen" aria-live="polite" data-calculator>
           <div class="screen-expression" data-expression></div>
           <div class="screen-result-wrapper">
             <div class="screen-result" data-result>0</div>
@@ -61,12 +56,9 @@
           </div>
         </section>
 
-        <section class="calculator-keypad" aria-label="Calculator keypad"></section>
-
+        <section class="calculator-keypad" data-i18n-aria-label="keypad_label" data-calculator></section>
       </section>
     </main>
-    <script src="common/prefs.js"></script>
-    <script src="errors.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>

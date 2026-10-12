@@ -1,0 +1,543 @@
+/*
+ * Shared by both layouts: the fonts, the Colony theme tokens mapped onto
+ * orCAL's roles, the window chrome, the display and the keys.
+ *
+ * Every colour comes from the vendored Colony palettes (vendor/colony/) and
+ * every text size is a base size times --font-scale, which common/theme.js
+ * sets from Preferences (font size x reading size, 0.7225 to 1.68).
+ */
+
+/* The three weights the family ships, and no synthesized ones. */
+@font-face {
+  font-family: "JetBrainsMono Nerd Font";
+  src: url("../fonts/JetBrainsMonoNerdFont/JetBrainsMonoNerdFont-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "JetBrainsMono Nerd Font";
+  src: url("../fonts/JetBrainsMonoNerdFont/JetBrainsMonoNerdFont-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "JetBrainsMono Nerd Font";
+  src: url("../fonts/JetBrainsMonoNerdFont/JetBrainsMonoNerdFont-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* OpenDyslexic ships one weight: it stands in for all three. */
+@font-face {
+  font-family: "OpenDyslexic";
+  src: url("../fonts/OpenDyslexic/OpenDyslexic-Regular.otf") format("opentype");
+  font-weight: 400 700;
+  font-style: normal;
+}
+
+/*
+ * colony-accents.css sets the eight accent overrides on :root, and every theme
+ * also sets --colony-accent-blue, the theme's own accent. The theme therefore
+ * goes on <body> (common/theme.js), not on <html>: the "blue" override is read
+ * here, where no theme hides it.
+ *
+ * --ink and --paper are colony-ui's contrast_on() ends: the near-black and
+ * near-white a label takes on a coloured fill, whichever contrasts more.
+ */
+:root {
+  --accent-override-blue: var(--colony-accent-blue);
+  --ink: color(srgb 0.08 0.08 0.1);
+  --paper: color(srgb 0.97 0.98 1);
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+/* Hidden until the saved preferences are applied (common/chrome.js). */
+html[data-loading] {
+  visibility: hidden;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  --font-scale: 1;
+  --colony-font: "JetBrainsMono Nerd Font";
+  /* Nerd Font glyphs, whatever the interface font: OpenDyslexic has none. */
+  --glyph-font: "JetBrainsMono Nerd Font";
+
+  --accent: var(--colony-accent-blue);
+  --on-accent: var(--paper);
+  --on-warning: var(--ink);
+  --text-primary: var(--colony-text-primary);
+  --text-secondary: var(--colony-text-secondary);
+  --text-muted: var(--colony-text-muted);
+  --text-dim: var(--colony-text-dim);
+  --text-dimmer: var(--colony-text-dimmer);
+  --text-dimmest: var(--colony-text-dimmest);
+  --border: var(--colony-border-subtle);
+  --divider: var(--colony-divider);
+  --shadow: color-mix(in srgb, var(--colony-text-primary) 14%, transparent);
+  --veil: color-mix(in srgb, var(--colony-text-primary) 8%, transparent);
+
+  --theme-transition: 240ms ease;
+  --button-transition: 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--colony-font);
+  font-weight: 400;
+  font-synthesis: none;
+  transition: color var(--theme-transition);
+}
+
+body[data-mode="dark"] {
+  --shadow: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
+body[data-on-accent="ink"] {
+  --on-accent: var(--ink);
+}
+
+body[data-on-warning="paper"] {
+  --on-warning: var(--paper);
+}
+
+body[data-accent="red"] {
+  --accent: var(--colony-accent-red);
+}
+
+body[data-accent="orange"] {
+  --accent: var(--colony-accent-orange);
+}
+
+body[data-accent="yellow"] {
+  --accent: var(--colony-accent-yellow);
+}
+
+body[data-accent="green"] {
+  --accent: var(--colony-accent-green);
+}
+
+body[data-accent="blue"] {
+  --accent: var(--accent-override-blue);
+}
+
+body[data-accent="indigo"] {
+  --accent: var(--colony-accent-indigo);
+}
+
+body[data-accent="violet"] {
+  --accent: var(--colony-accent-violet);
+}
+
+body[data-accent="amber"] {
+  --accent: var(--colony-accent-amber);
+}
+
+body[data-dyslexia] {
+  --colony-font: "OpenDyslexic";
+}
+
+/*
+ * High contrast, derived from the active palette as colony-ui's
+ * with_high_contrast() does: text and borders pushed away from the
+ * background, towards near-white on a dark theme and near-black on a light one.
+ */
+body[data-high-contrast] {
+  --contrast-end: var(--paper);
+  --text-primary: color-mix(in srgb, var(--colony-text-primary), var(--contrast-end) 45%);
+  --text-secondary: color-mix(in srgb, var(--colony-text-secondary), var(--contrast-end) 40%);
+  --text-muted: color-mix(in srgb, var(--colony-text-muted), var(--contrast-end) 35%);
+  --text-dim: color-mix(in srgb, var(--colony-text-dim), var(--contrast-end) 30%);
+  --text-dimmer: color-mix(in srgb, var(--colony-text-dimmer), var(--contrast-end) 30%);
+  --border: color-mix(in srgb, var(--colony-border-subtle), var(--contrast-end) 45%);
+  --divider: color-mix(in srgb, var(--colony-divider), var(--contrast-end) 45%);
+}
+
+body[data-high-contrast][data-mode="light"] {
+  --contrast-end: var(--ink);
+}
+
+/*
+ * Reduced motion: set when Appearance > Effects is off, when Accessibility >
+ * Motion asks for it, or when the system does (common/theme.js).
+ */
+body[data-motion="off"] *,
+body[data-motion="off"] *::before,
+body[data-motion="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+button,
+select {
+  font-family: inherit;
+}
+
+.glyph {
+  font-family: var(--glyph-font);
+  font-weight: 400;
+}
+
+.calculator-app {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The frame both layouts draw: one surface, sized by the layout. */
+.calculator-frame {
+  background: var(--colony-bg-primary);
+  overflow: hidden;
+  box-shadow: 0 24px 60px var(--shadow), 0 6px 18px var(--shadow);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: background-color var(--theme-transition),
+    box-shadow var(--theme-transition);
+}
+
+/* Window chrome */
+
+.calculator-status {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-weight: 500;
+  font-size: calc(14px * var(--font-scale));
+  padding: 0 6px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.status-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 3;
+  -webkit-app-region: no-drag;
+}
+
+.status-icon-button {
+  width: calc(22px * var(--font-scale));
+  height: calc(22px * var(--font-scale));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  padding: 0;
+  color: var(--text-secondary);
+  background: var(--veil);
+  font-size: calc(13px * var(--font-scale));
+  cursor: pointer;
+  appearance: none;
+  transition: background-color var(--theme-transition),
+    color var(--theme-transition), transform var(--button-transition);
+  -webkit-app-region: no-drag;
+}
+
+.status-icon-button:hover {
+  color: var(--text-primary);
+  background: var(--colony-bg-card-hover);
+}
+
+.status-icon-button:active {
+  transform: scale(0.96);
+}
+
+.status-icon-button[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.status-message {
+  min-height: 1.2em;
+  text-align: center;
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 400;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--theme-transition);
+}
+
+.status-message--visible {
+  opacity: 1;
+}
+
+/* The program's name: the way into Preferences (design/navigation.md). */
+.status-brand {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 3;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: calc(16px * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  transition: background-color var(--theme-transition),
+    color var(--theme-transition);
+  -webkit-app-region: no-drag;
+}
+
+.status-brand .glyph {
+  font-size: calc(14px * var(--font-scale));
+  letter-spacing: 0;
+  color: var(--text-dimmer);
+  transition: color var(--theme-transition);
+}
+
+.status-brand:hover {
+  background: var(--colony-bg-card-hover);
+}
+
+.status-brand[aria-expanded="true"] {
+  background: var(--colony-bg-selected);
+}
+
+.status-brand[aria-expanded="true"] .glyph,
+.status-brand:hover .glyph {
+  color: var(--text-primary);
+}
+
+/* Display */
+
+.calculator-screen {
+  flex: 0 0 auto;
+  padding: 12px 10px;
+  border-radius: 20px;
+  background: var(--colony-bg-input);
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  box-shadow: inset 0 0 0 1px var(--border);
+  transition: background-color var(--theme-transition),
+    box-shadow var(--theme-transition), color var(--theme-transition);
+}
+
+.screen-expression {
+  font-size: calc(18px * var(--font-scale));
+  color: var(--text-muted);
+  /* Keep a fixed line box so the result line doesn't shift when text appears. */
+  line-height: 1.2;
+  height: 1.2em;
+  transition: color var(--theme-transition);
+}
+
+.screen-result {
+  font-size: calc(40px * var(--font-scale));
+  font-weight: 700;
+  /* Prevent baseline/line-height changes from shifting the display when digits change. */
+  line-height: 1.2;
+  height: 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+  transition: color var(--theme-transition);
+}
+
+.screen-result-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.screen-result-tooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--colony-bg-card);
+  color: var(--text-primary);
+  font-size: calc(16px * var(--font-scale));
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  box-shadow: 0 16px 30px var(--shadow);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition-property: opacity, transform, background-color, color, box-shadow;
+  transition-duration: 160ms, 160ms, var(--theme-transition),
+    var(--theme-transition), var(--theme-transition);
+}
+
+.screen-result-wrapper--tooltip:hover .screen-result-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Keys */
+
+.calculator-keypad {
+  container-type: inline-size;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--keypad-columns, 4), minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.key {
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 22px;
+  padding: 0;
+  overflow: hidden;
+  font-size: calc(22px * var(--font-scale));
+  font-weight: 500;
+  background: var(--colony-bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 8px 16px var(--shadow);
+  cursor: pointer;
+  transition: transform var(--button-transition),
+    box-shadow var(--button-transition), background-color var(--theme-transition),
+    color var(--theme-transition);
+}
+
+.key:hover {
+  transform: translateY(-1px);
+  background: var(--colony-bg-card-hover);
+  box-shadow: 0 10px 20px var(--shadow);
+}
+
+.key:active {
+  transform: translateY(1px);
+  background: var(--colony-bg-card-pressed);
+  box-shadow: 0 4px 10px var(--shadow);
+}
+
+.key-operator,
+.key-operator:hover,
+.key-operator:active {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.key-utility {
+  background: var(--colony-btn-default);
+  color: var(--text-secondary);
+}
+
+.key-utility:hover {
+  background: var(--colony-btn-hover);
+}
+
+.key-utility:active {
+  background: var(--colony-btn-pressed);
+}
+
+.key-backspace,
+.key-backspace:hover,
+.key-backspace:active {
+  background: var(--colony-warning);
+  color: var(--on-warning);
+}
+
+.key-operator:hover,
+.key-backspace:hover {
+  filter: brightness(1.06);
+}
+
+/* The scientific functions, smaller so the longest label fits at 1.68x. */
+.key-muted {
+  font-size: calc(16px * var(--font-scale));
+  color: var(--text-secondary);
+}
+
+/*
+ * OpenDyslexic draws "ANS" 3.3em wide, more than a seventh of the keypad holds
+ * at the largest text sizes: there the three-letter labels stop growing and
+ * follow the keypad's width instead.
+ */
+body[data-dyslexia] .key[data-long] {
+  font-size: min(calc(16px * var(--font-scale)), calc(4.2cqi - 5px));
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* A dismissible notice at the bottom of the frame (theme_applied). */
+.toast {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--colony-bg-selected);
+  color: var(--text-primary);
+  font-size: calc(13px * var(--font-scale));
+  box-shadow: 0 10px 24px var(--shadow);
+}
+
+.toast-message {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-dismiss {
+  flex: none;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: calc(13px * var(--font-scale));
+  cursor: pointer;
+}
+
+.toast-dismiss:hover {
+  color: var(--text-primary);
+  background: var(--colony-bg-card-hover);
+}

@@ -2,6 +2,8 @@
 
 mod commands;
 mod engine;
+#[cfg(test)]
+mod i18n;
 #[cfg(target_os = "linux")]
 mod linux_display;
 mod migrate;

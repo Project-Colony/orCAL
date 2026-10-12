@@ -19,6 +19,19 @@ orCAL is a Rust calculator with a Tauri interface. The web UI is served by Tauri
   undefined or infinite result, factorial out of range, and expressions nested
   more than 256 levels deep
 
+- Preferences, opened and closed by clicking the orCAL name at the top of the
+  window, and saved as soon as they change:
+  - General: English or French (or the system language), and the layout orCAL
+    opens in
+  - Appearance: every Colony theme, an accent colour, the text size, and
+    animations, with a live preview
+  - Accessibility: high contrast, the OpenDyslexic font, reduced motion (also
+    on when the system asks for it) and a reading text size that multiplies
+    with the Appearance one
+- In French, results and the decimal key use a decimal comma
+- The window controls in the status bar switch between the phone and tablet
+  layouts, minimize orCAL and close it
+
 Every expression, from either layout, is evaluated by the Rust engine in
 `src/engine.rs`. The interface never evaluates code itself, and the web view
 runs under a content security policy that only allows the app's own scripts,
@@ -71,7 +84,8 @@ hand.
 ## Development
 
 - `cargo run` to run the Tauri app
-- `cargo test` to run the engine and command-line tests
+- `cargo test` to run the engine, preferences and command-line tests, and the
+  checks that keep the English and French strings complete
 - `cargo build --release` to compile in release mode
 
 ## Structure
@@ -84,7 +98,15 @@ hand.
 - `src/preferences.rs`: `preferences.json` and the commands that read and write it
 - `src/migrate.rs`: copies the settings of versions before the Colony layout
 - `src/linux_display.rs`: the WebKitGTK workaround for Wayland
-- `src/ui/`: HTML/CSS/JS interface; `src/ui/common/` is shared by both layouts
+- `src/i18n.rs`: tests that hold the two locale files to the same keys
+- `src/ui/`: HTML/CSS/JS interface, `index.html` for the phone layout and
+  `tablet-mode/` for the tablet one
+- `src/ui/common/`: what both layouts share: the theme tokens and fonts
+  (`base.css`), the window chrome, the Preferences page, and the preferences
+  and translation layers
+- `src/ui/i18n/`: the interface strings, `en.json` (canonical) and `fr.json`
+- `src/ui/fonts/`: JetBrains Mono Nerd Font and OpenDyslexic, each with its
+  licence
 - `src/ui/vendor/colony/`: the Colony theme data, refreshed with
   `scripts/sync-colony-tokens.sh <commit>` and never edited by hand
 - `tauri.conf.json`: window, content security policy and capability settings
@@ -117,3 +139,6 @@ macOS and Linux), which follows its vendor's own privacy policy.
 GPL-3.0-or-later. You may redistribute and modify orCAL under the terms of
 version 3 of the GNU General Public License, or (at your option) any later
 version. The full text is in [LICENSE](LICENSE).
+
+The bundled fonts, JetBrains Mono Nerd Font and OpenDyslexic, are under the SIL
+Open Font License 1.1, whose text sits next to each of them in `src/ui/fonts/`.

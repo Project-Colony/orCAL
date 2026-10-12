@@ -1,12 +1,12 @@
-const root = document.documentElement;
-const toggleButton = document.querySelector(".theme-toggle-button");
-const toggleLabel = document.querySelector(".theme-toggle-label");
+import { boot } from "../common/chrome.js";
+import { decimalSeparator, engineError, localizeNumber, t } from "../common/i18n.js";
+import { isPreferencesOpen } from "../common/preferences.js";
+
 const keypad = document.querySelector(".calculator-keypad");
 const expressionEl = document.querySelector("[data-expression]");
 const resultEl = document.querySelector("[data-result]");
 const resultWrapperEl = document.querySelector(".screen-result-wrapper");
 const resultTooltipEl = document.querySelector("[data-result-tooltip]");
-const statusTimeEl = document.querySelector(".status-time");
 
 const tauriInvoke = window.__TAURI__?.core?.invoke ?? null;
 
@@ -14,11 +14,11 @@ const tauriInvoke = window.__TAURI__?.core?.invoke ?? null;
 const keysScientific = [
   { label: "(", type: "muted", action: "paren" },
   { label: ")", type: "muted", action: "paren" },
-  { label: "π", type: "muted", action: "const-pi", ariaLabel: "Pi" },
+  { label: "π", type: "muted", action: "const-pi", ariaLabel: "key_pi" },
   { label: "C", type: "utility", action: "clear" },
   { label: "±", type: "utility", action: "toggle-sign" },
   { label: "%", type: "utility", action: "percent" },
-  { label: "⌫", type: "backspace", action: "backspace", ariaLabel: "Backspace" },
+  { label: "⌫", type: "backspace", action: "backspace", ariaLabel: "key_backspace" },
 
   { label: "sin", type: "muted", action: "func" },
   { label: "cos", type: "muted", action: "func" },
@@ -30,7 +30,7 @@ const keysScientific = [
 
   { label: "ln", type: "muted", action: "func" },
   { label: "log", type: "muted", action: "func" },
-  { label: "√", type: "muted", action: "sqrt", ariaLabel: "Square root" },
+  { label: "√", type: "muted", action: "sqrt", ariaLabel: "key_sqrt" },
   { label: "4", type: "number" },
   { label: "5", type: "number" },
   { label: "6", type: "number" },
@@ -44,9 +44,9 @@ const keysScientific = [
   { label: "3", type: "number" },
   { label: "−", type: "operator", action: "operator" },
 
-  { label: "e", type: "muted", action: "const-e", ariaLabel: "Euler's number" },
+  { label: "e", type: "muted", action: "const-e", ariaLabel: "key_e" },
   { label: "!", type: "muted", action: "factorial" },
-  { label: "ANS", type: "muted", action: "ans", ariaLabel: "Last result" },
+  { label: "ANS", type: "muted", action: "ans", ariaLabel: "key_ans" },
   { label: "0", type: "number" },
   { label: ".", type: "number", action: "decimal" },
   { label: "=", type: "operator", action: "equals" },
@@ -55,7 +55,10 @@ const keysScientific = [
 
 const state = {
   expression: "",
+  // The engine's result, a plain decimal with "." whatever the locale.
   result: "0",
+  // Instead of a result: the i18n key of what went wrong.
+  error: null,
 };
 
 // The last result, sent back to the engine for the ANS key.
@@ -71,12 +74,15 @@ const operatorMap = {
   "^": "^",
 };
 
+// Drawn again when the language changes: the decimal key shows the locale's
+// separator and the labels are translated.
 const renderKeys = () => {
+  keypad.replaceChildren();
   keysScientific.forEach((key) => {
     const button = document.createElement("button");
     button.type = "button";
     button.classList.add("key");
-    button.textContent = key.label;
+    button.textContent = key.action === "decimal" ? decimalSeparator() : key.label;
     button.dataset.action = key.action || "input";
 
     if (key.type === "operator") {
@@ -91,40 +97,28 @@ const renderKeys = () => {
       button.classList.add("key-muted");
     }
 
+    if (key.label.length >= 3) {
+      button.dataset.long = "";
+    }
+
     if (key.type === "backspace") {
       button.classList.add("key-backspace");
-      button.setAttribute("aria-label", key.ariaLabel || key.label);
+    }
+
+    if (key.ariaLabel) {
+      button.setAttribute("aria-label", t(key.ariaLabel));
     }
 
     keypad.appendChild(button);
   });
 };
 
-const updateStatusTime = () => {
-  if (!statusTimeEl) {
-    return;
-  }
-  const formatter = new Intl.DateTimeFormat(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  statusTimeEl.textContent = formatter.format(new Date());
-};
-
-const isDarkTheme = () => orcalPreferences.current.selected_variant === "mocha";
-
-const applyTheme = () => {
-  const dark = isDarkTheme();
-  root.dataset.theme = dark ? "mocha" : "latte";
-  toggleButton.setAttribute("aria-pressed", dark);
-  toggleLabel.textContent = dark ? "Mocha" : "Latte";
-};
-
 const updateScreen = () => {
-  expressionEl.textContent = state.expression || "";
-  resultEl.textContent = state.result || "0";
+  const result = state.error ? t(state.error) : localizeNumber(state.result || "0");
+  expressionEl.textContent = localizeNumber(state.expression);
+  resultEl.textContent = result;
   if (resultTooltipEl) {
-    resultTooltipEl.textContent = state.result || "0";
+    resultTooltipEl.textContent = result;
   }
   if (resultWrapperEl) {
     requestAnimationFrame(() => {
@@ -308,7 +302,7 @@ const evaluateExpression = async () => {
     return;
   }
   if (!tauriInvoke) {
-    state.result = "Available in Tauri";
+    state.error = "desktop_only";
     return;
   }
   try {
@@ -318,9 +312,10 @@ const evaluateExpression = async () => {
     });
     // Already rounded by the engine: shown as is. ANS keeps the full value.
     state.result = response.result;
+    state.error = null;
     memory.ans = response.value;
   } catch (error) {
-    state.result = engineErrorMessage(error);
+    state.error = engineError(error);
   }
 };
 
@@ -329,6 +324,7 @@ const handleInputAction = async ({ action, label }) => {
     case "clear":
       state.expression = "";
       state.result = "0";
+      state.error = null;
       break;
     case "backspace":
       state.expression = state.expression.slice(0, -1);
@@ -395,7 +391,15 @@ keypad.addEventListener("click", async (event) => {
 });
 
 document.addEventListener("keydown", async (event) => {
-  if (event.altKey || event.ctrlKey || event.metaKey) {
+  // Keys typed in Preferences are theirs, and Enter on a window control or on
+  // the orCAL name presses it rather than "=".
+  if (
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey ||
+    isPreferencesOpen() ||
+    (event.key === "Enter" && event.target.closest?.(".calculator-status"))
+  ) {
     return;
   }
 
@@ -430,117 +434,11 @@ document.addEventListener("keydown", async (event) => {
   await handleInputAction({ action, label });
 });
 
-updateStatusTime();
-setInterval(updateStatusTime, 60_000);
-
-toggleButton.addEventListener("click", async () => {
-  await orcalPreferences.update({
-    selected_theme: "catppuccin",
-    selected_variant: isDarkTheme() ? "latte" : "mocha",
-  });
-  applyTheme();
+document.addEventListener("orcal:locale", () => {
+  renderKeys();
+  updateScreen();
 });
-
-const tauriAppWindow = window.__TAURI__?.window?.getCurrentWindow() ?? null;
-const isTauriAvailable = Boolean(tauriAppWindow);
-const statusMessageEl = document.querySelector(".status-message");
-const statusIconsEl = document.querySelector(".status-icons");
-const batteryButton = document.querySelector('[data-action="battery"]');
-let statusMessageTimeout = null;
-
-const showStatusMessage = (message) => {
-  if (!statusMessageEl) {
-    return;
-  }
-  statusMessageEl.textContent = message;
-  statusMessageEl.classList.add("status-message--visible");
-  if (statusMessageTimeout) {
-    window.clearTimeout(statusMessageTimeout);
-  }
-  statusMessageTimeout = window.setTimeout(() => {
-    statusMessageEl.classList.remove("status-message--visible");
-    statusMessageEl.textContent = "";
-  }, 3_000);
-};
-
-const disableInterface = () => {
-  document.documentElement.classList.add("app-disabled");
-  document.querySelectorAll("button").forEach((button) => {
-    button.disabled = true;
-    button.setAttribute("aria-disabled", "true");
-  });
-};
-
-statusIconsEl?.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-action]");
-  if (!button) {
-    return;
-  }
-
-  const action = button.dataset.action;
-  if (action === "switch-phone" || action === "switch-tablet") {
-    return;
-  }
-
-  const appWindow = tauriAppWindow;
-
-  if (action === "battery") {
-    if (batteryButton) {
-      batteryButton.textContent = "🪫";
-      batteryButton.setAttribute("aria-label", "Battery 0%");
-    }
-    showStatusMessage("Battery empty, orCAL is shutting down.");
-    if (appWindow?.close) {
-      window.setTimeout(() => appWindow.close(), 800);
-    } else {
-      window.close();
-      disableInterface();
-    }
-    return;
-  }
-
-  if (action === "minimize") {
-    if (appWindow?.minimize) {
-      appWindow.minimize();
-    } else {
-      showStatusMessage("Available only in the Tauri app.");
-    }
-  }
-});
-
-if (!isTauriAvailable) {
-  const minimizeBtn = document.querySelector('.status-icon-button[data-action="minimize"]');
-  if (minimizeBtn) {
-    minimizeBtn.setAttribute("aria-disabled", "true");
-    minimizeBtn.classList.add("status-icon-button--disabled");
-  }
-}
-
-const switchPhoneButton = document.querySelector('[data-action="switch-phone"]');
-if (switchPhoneButton) {
-  switchPhoneButton.addEventListener("click", async () => {
-    const appWindow = tauriAppWindow;
-    if (appWindow) {
-      await appWindow.setSize(new window.__TAURI__.window.LogicalSize(360, 720));
-      await appWindow.center();
-    }
-    window.location.href = "../index.html";
-  });
-}
-
-const dragRegion = document.querySelector(".drag-region");
-if (dragRegion) {
-  dragRegion.addEventListener("dblclick", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  });
-}
 
 renderKeys();
 updateScreen();
-// The page stays hidden until the saved theme is on, so it never flashes the
-// default one.
-orcalPreferences
-  .load()
-  .then(applyTheme)
-  .finally(() => delete root.dataset.loading);
+boot();

@@ -27,6 +27,7 @@ pub fn evaluate_expression(expression: String, ans: f64) -> Result<EvalResponse,
 #[derive(Serialize)]
 pub struct AppInfo {
     version: &'static str,
+    license: &'static str,
     /// Where orCAL keeps its files, for the About page; `None` when the
     /// platform has no such folder.
     config_dir: Option<String>,
@@ -41,6 +42,7 @@ pub fn get_app_info() -> AppInfo {
         |dir: std::io::Result<std::path::PathBuf>| dir.ok().map(|d| d.display().to_string());
     AppInfo {
         version: env!("CARGO_PKG_VERSION"),
+        license: env!("CARGO_PKG_LICENSE"),
         config_dir: shown(paths::locate::config_dir()),
         data_dir: shown(paths::locate::data_dir()),
         cache_dir: shown(paths::locate::cache_dir()),
