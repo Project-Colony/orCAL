@@ -1,9 +1,8 @@
 /* The phone layout. Everything both layouts share is in common/base.css. */
 
 .calculator-phone-frame {
-  width: 360px;
-  height: clamp(600px, 92vh, 720px);
-  border-radius: 36px;
+  width: 100vw;
+  height: 100vh;
   padding: 28px 24px 22px;
   gap: 20px;
 }
@@ -23,15 +22,3 @@
   -webkit-app-region: drag;
 }
 
-@media (max-width: 420px) {
-  .calculator-phone-frame {
-    width: min(360px, 92vw);
-    height: min(720px, 92vh);
-  }
-}
-
-@media (max-height: 760px) {
-  .calculator-phone-frame {
-    height: min(720px, 92vh);
-  }
-}

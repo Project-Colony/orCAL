@@ -98,12 +98,16 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: transparent;
+  /* The window is opaque and the size of the frame: WebKitGTK repaints a
+     transparent window only where it changes, which leaves most of the
+     calculator invisible on Linux. */
+  background: var(--colony-bg-primary);
   color: var(--text-primary);
   font-family: var(--colony-font);
   font-weight: 400;
   font-synthesis: none;
-  transition: color var(--theme-transition);
+  transition: color var(--theme-transition),
+    background-color var(--theme-transition);
 }
 
 body[data-mode="dark"] {
@@ -220,6 +224,9 @@ select {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* The bar moves the window: selecting its text would start a text drag. */
+  -webkit-user-select: none;
+  user-select: none;
   font-weight: 500;
   font-size: calc(14px * var(--font-scale));
   padding: 0 6px;

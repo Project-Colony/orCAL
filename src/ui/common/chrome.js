@@ -9,6 +9,11 @@ import { initPreferences } from "./preferences.js";
 
 const appWindow = window.__TAURI__?.window?.getCurrentWindow() ?? null;
 
+// Nothing in orCAL is dragged and dropped. WebKitGTK under XWayland crashes in
+// gdk_drag_begin when a text or image drag starts (moving the window by its
+// status bar started one), so none ever starts.
+document.addEventListener("dragstart", (event) => event.preventDefault());
+
 // Pages and window sizes, as src/preferences.rs opens them (Layout).
 const LAYOUTS = {
   phone: { page: "../index.html", size: [360, 720] },
