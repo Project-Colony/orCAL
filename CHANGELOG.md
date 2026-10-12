@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/Project-Colony/orCAL/compare/v0.4.1...v0.4.2) (2026-10-12)
+
+
+### Fixes
+
+* **ui:** put the orCAL button in the top-left corner ([#51](https://github.com/Project-Colony/orCAL/issues/51)) ([aa63447](https://github.com/Project-Colony/orCAL/commit/aa63447661971d81cdc3f00d3549ea826de4dacd))
+
 ## [0.4.1](https://github.com/Project-Colony/orCAL/compare/v0.4.0...v0.4.1) (2026-10-12)
 
 

@@ -1,7 +1,7 @@
 [package]
 name = "orcal"
 description = "A small desktop calculator with a phone keypad and a scientific tablet layout"
-version = "0.4.1"
+version = "0.4.2"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/Project-Colony/orCAL"
 edition = "2021"
