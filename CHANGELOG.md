@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.0](https://github.com/Project-Colony/orCAL/compare/v0.3.1...v0.4.0) (2026-10-12)
+
+
+### Features
+
+* add Preferences with Colony themes, fonts, French and accessibility settings, keeping settings under Colony/orCAL ([#42](https://github.com/Project-Colony/orCAL/issues/42)) ([00dd339](https://github.com/Project-Colony/orCAL/commit/00dd339ea551ace8fe975e110d687f8895c27461))
+
+
+### Fixes
+
+* never save over a preferences file that could not be read, and put the orCAL button top-left ([#44](https://github.com/Project-Colony/orCAL/issues/44)) ([fdb4c10](https://github.com/Project-Colony/orCAL/commit/fdb4c109113e48a9b0971889e9b4ab1f85094547))
+* show the whole calculator on Linux, keep it movable and stop the drag crash ([#46](https://github.com/Project-Colony/orCAL/issues/46)) ([214e503](https://github.com/Project-Colony/orCAL/commit/214e5033f71025124effd5ae27ffd7635d790259))
+* show Unavailable on About rows the app could not fill instead of leaving them blank ([#47](https://github.com/Project-Colony/orCAL/issues/47)) ([46e6ab1](https://github.com/Project-Colony/orCAL/commit/46e6ab18ea34285fa755cb0be425f0064ef3546c))
+* **ui:** say Unavailable on About rows the desktop app could not fill ([46e6ab1](https://github.com/Project-Colony/orCAL/commit/46e6ab18ea34285fa755cb0be425f0064ef3546c))
+
+
+### Documentation
+
+* rewrite the README on the Colony program template ([#45](https://github.com/Project-Colony/orCAL/issues/45)) ([eebe98e](https://github.com/Project-Colony/orCAL/commit/eebe98e98865ae90d9e8cbcc256031769c93729d))
+* say that an unknown theme falls back to Gruvbox dark ([#48](https://github.com/Project-Colony/orCAL/issues/48)) ([8fba622](https://github.com/Project-Colony/orCAL/commit/8fba6223bab1aed8e83cc5311ad9ebb2fecae6d5))
+
 ## [0.3.1](https://github.com/Project-Colony/orCAL/compare/v0.3.0...v0.3.1) (2026-10-09)
 
 
