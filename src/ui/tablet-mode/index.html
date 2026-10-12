@@ -16,36 +16,38 @@
         <div class="drag-region" data-tauri-drag-region aria-hidden="true"></div>
         <header class="calculator-status" data-tauri-drag-region>
           <div class="status" data-tauri-drag-region>
-            <div class="status-time" data-tauri-drag-region aria-live="polite">--:--</div>
-            <div class="status-icons" role="group" data-i18n-aria-label="window_controls">
-              <button
-                class="status-icon-button glyph"
-                type="button"
-                data-action="switch-layout"
-                data-layout="phone"
-                data-i18n-aria-label="layout_switch_phone"
-                data-i18n-title="layout_switch_phone"
-              >&#xf011c;</button>
-              <button
-                class="status-icon-button glyph"
-                type="button"
-                data-action="minimize"
-                data-i18n-aria-label="window_minimize"
-                data-i18n-title="window_minimize"
-              >&#xf05b0;</button>
-              <button
-                class="status-icon-button glyph"
-                type="button"
-                data-action="close"
-                data-i18n-aria-label="window_close"
-                data-i18n-title="window_close"
-              >&#xf0156;</button>
+            <button class="status-brand" type="button" data-i18n-title="settings_title">
+              orCAL<span class="glyph" aria-hidden="true">&#xf013;</span>
+            </button>
+            <div class="status-end" data-tauri-drag-region>
+              <div class="status-time" data-tauri-drag-region aria-live="polite">--:--</div>
+              <div class="status-icons" role="group" data-i18n-aria-label="window_controls">
+                <button
+                  class="status-icon-button glyph"
+                  type="button"
+                  data-action="switch-layout"
+                  data-layout="phone"
+                  data-i18n-aria-label="layout_switch_phone"
+                  data-i18n-title="layout_switch_phone"
+                >&#xf011c;</button>
+                <button
+                  class="status-icon-button glyph"
+                  type="button"
+                  data-action="minimize"
+                  data-i18n-aria-label="window_minimize"
+                  data-i18n-title="window_minimize"
+                >&#xf05b0;</button>
+                <button
+                  class="status-icon-button glyph"
+                  type="button"
+                  data-action="close"
+                  data-i18n-aria-label="window_close"
+                  data-i18n-title="window_close"
+                >&#xf0156;</button>
+              </div>
             </div>
           </div>
           <div class="status-message" role="status" aria-live="polite"></div>
-          <button class="status-brand" type="button" data-i18n-title="settings_title">
-            orCAL<span class="glyph" aria-hidden="true">&#xf013;</span>
-          </button>
         </header>
 
         <section class="calculator-tablet-body" data-i18n-aria-label="calculator_scientific" data-calculator>
