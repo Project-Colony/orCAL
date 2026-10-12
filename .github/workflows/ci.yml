@@ -33,13 +33,13 @@ jobs:
         with:
           persist-credentials: false
 
-      # Pinned to master with `toolchain: stable` rather than to the `stable`
-      # branch: that branch is rebased onto every master commit, so a SHA
-      # pinned on it stops being reachable from any branch.
-      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master, 2026-10-09
-        with:
-          toolchain: stable
-          components: clippy, rustfmt
+      # rustup is on every GitHub-hosted runner image, so there is no
+      # third-party toolchain action to pin.
+      - name: Install Rust
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy,rustfmt --no-self-update
+          rustup default stable
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
@@ -64,6 +64,12 @@ jobs:
       - name: Build
         run: cargo build
 
+      # The release workflow smoke-tests every artifact with --version; a
+      # binary that stopped answering it fails here instead of at release time.
+      - name: Answer --version
+        shell: bash
+        run: ./target/debug/orCAL --version
+
       # Same check as the release workflow's Windows leg: SignPath signs only
       # an .exe whose version resource names the project and carries its
       # version, and tauri-build is what writes it.
@@ -72,7 +78,7 @@ jobs:
         shell: pwsh
         run: |
           $version = (cargo metadata --no-deps --format-version 1 | ConvertFrom-Json).packages |
-            Where-Object name -eq 'orcal-tauri' | ForEach-Object version
+            Where-Object name -eq 'orcal' | ForEach-Object version
           $info = (Get-Item target\debug\orCAL.exe).VersionInfo
           "ProductName='$($info.ProductName)' ProductVersion='$($info.ProductVersion)' FileVersion='$($info.FileVersion)'"
           if ($info.ProductName -cne 'orCAL' -or $info.ProductVersion -cne $version) {
@@ -82,3 +88,43 @@ jobs:
 
       - name: Test
         run: cargo test
+
+  # rust-version in Cargo.toml is a promise about who can build orCAL. Without
+  # this job nothing ever builds on it, and it drifts.
+  #
+  # RUSTUP_TOOLCHAIN is what pins the cargo invocations: it outranks both the
+  # rustup default and any rust-toolchain.toml. The rustc check makes a pin
+  # that silently stopped working fail loudly.
+  msrv:
+    name: MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read the declared MSRV
+        id: msrv
+        run: |
+          version=$(grep '^rust-version' Cargo.toml | tr -d ' "' | cut -d= -f2)
+          [ -n "$version" ] || { echo "::error::could not read rust-version from Cargo.toml"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "RUSTUP_TOOLCHAIN=$version" >> "$GITHUB_ENV"
+
+      - name: Install Rust ${{ steps.msrv.outputs.version }}
+        run: rustup toolchain install "${{ steps.msrv.outputs.version }}" --profile minimal --no-self-update
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          key: msrv-${{ steps.msrv.outputs.version }}
+
+      - name: Install Linux Tauri dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev
+
+      - name: Build on the declared floor
+        run: |
+          rustc --version | grep -q "^rustc ${RUSTUP_TOOLCHAIN}[. ]" \
+            || { echo "::error::expected rustc ${RUSTUP_TOOLCHAIN}, got $(rustc --version)"; exit 1; }
+          cargo check --locked --all-targets

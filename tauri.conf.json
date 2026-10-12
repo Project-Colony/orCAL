@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "orCAL",
+  "identifier": "com.orcal.app",
+  "build": {
+    "frontendDist": "src/ui"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src ipc: http://ipc.localhost https://ipc.localhost",
+      "capabilities": [
+        {
+          "identifier": "default",
+          "description": "The window controls the calculator UI calls, and nothing else.",
+          "windows": [
+            "main"
+          ],
+          "permissions": [
+            "core:window:allow-close",
+            "core:window:allow-minimize",
+            "core:window:allow-set-size",
+            "core:window:allow-set-resizable",
+            "core:window:allow-center",
+            "core:window:allow-start-dragging"
+          ]
+        }
+      ]
+    },
+    "windows": [
+      {
+        "title": "orCAL",
+        "width": 360,
+        "height": 720,
+        "resizable": true,
+        "maximizable": false,
+        "transparent": true,
+        "decorations": false,
+        "shadow": false,
+        "useHttpsScheme": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "assets/icons/icon.ico",
+      "assets/icons/icon-512.png"
+    ]
+  }
+}

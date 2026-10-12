@@ -1,5 +1,5 @@
 // English text for the calculation engine's error codes (ParseError::code in
-// crates/orcal-core), until the interface gets its i18n layer.
+// src/engine.rs), until the interface gets its i18n layer.
 const engineErrorMessages = new Map([
   ["error_empty", "Empty expression"],
   ["error_invalid_token", "Invalid expression"],
