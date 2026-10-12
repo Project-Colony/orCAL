@@ -91,9 +91,9 @@ fn open_main_window(app: &App, preferences: &Preferences) -> tauri::Result<Webvi
         }
     }
     let window = builder.build()?;
-    // X11 (XWayland) window managers only see a 10x10 size hint from the
-    // builder, so floating window managers such as Hyprland pick their own
-    // size; asking again once the window exists gives the layout's size.
+    // A floating window manager can map the window before the builder's size
+    // reaches it (XWayland only saw a 10x10 hint) and pick its own size;
+    // asking again once the window exists gives the layout's size.
     let (width, height) = layout.size();
     if let Err(error) = window.set_size(LogicalSize::new(width, height)) {
         log::warn!("the window keeps the size the window manager chose: {error}");

@@ -224,6 +224,9 @@ select {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* The bar moves the window: selecting its text would start a text drag. */
+  -webkit-user-select: none;
+  user-select: none;
   font-weight: 500;
   font-size: calc(14px * var(--font-scale));
   padding: 0 6px;
