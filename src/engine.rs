@@ -1,3 +1,5 @@
+//! The calculation engine: parses an expression and evaluates it to an f64.
+
 use std::f64::consts::{E, PI};
 use thiserror::Error;
 

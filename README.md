@@ -20,39 +20,49 @@ orCAL is a Rust calculator with a Tauri interface. The web UI is served by Tauri
   more than 256 levels deep
 
 Every expression, from either layout, is evaluated by the Rust engine in
-`crates/orcal-core`. The interface never evaluates code itself, and the web view
+`src/engine.rs`. The interface never evaluates code itself, and the web view
 runs under a content security policy that only allows the app's own scripts,
 styles and IPC.
 
 ## Prerequisites
 
-- Rust (stable toolchain) and Cargo installed
+- Rust 1.90 or newer, with Cargo
 - System dependencies for Tauri (see the Tauri documentation for your OS)
 
 ## Installation
 
 ```bash
-cargo build -p orcal-tauri
+cargo build --release
 ```
+
+The binary is `target/release/orCAL` (`orCAL.exe` on Windows).
 
 ## Usage
 
 To start the Tauri app in development mode:
 
 ```bash
-cargo run -p orcal-tauri
+cargo run
 ```
+
+`orCAL --version` prints the version and exits without opening a window.
 
 ## Development
 
-- `cargo run -p orcal-tauri` to run the Tauri app
-- `cargo build -p orcal-tauri --release` to compile in release mode
+- `cargo run` to run the Tauri app
+- `cargo test` to run the engine and command-line tests
+- `cargo build --release` to compile in release mode
 
 ## Structure
 
-- `crates/orcal-core`: parsing and evaluation logic
-- `src-tauri`: Tauri application
-- `ui/`: HTML/CSS/JS interface
+- `src/main.rs`: entry point and Tauri setup
+- `src/engine.rs`: parsing and evaluation logic
+- `src/commands.rs`: the command the interface calls to evaluate an expression
+- `src/window_state.rs`: remembers the window position between runs
+- `src/linux_display.rs`: the WebKitGTK workaround for Wayland
+- `src/ui/`: HTML/CSS/JS interface
+- `tauri.conf.json`: window, content security policy and capability settings
+- `assets/icons/`: application icons
 
 ## Code signing policy
 
