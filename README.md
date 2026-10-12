@@ -231,7 +231,7 @@ roaming) application folders:
 
 | Data | Stored or sent | Where, and why |
 |---|---|---|
-| Preferences | stored | `preferences/preferences.json` in the settings folder: theme, accent, text size, accessibility, language and startup layout, saved as soon as they change. A setting with a bad value falls back to its default. A file that orCAL reads but that is not a JSON object is moved to `preferences.json.bak` and orCAL starts from the defaults. A file it cannot read (permissions, a lock) or cannot move aside is left untouched: orCAL starts from the defaults and saves nothing over it until the next launch |
+| Preferences | stored | `preferences/preferences.json` in the settings folder: theme, accent, text size, accessibility, language and startup layout, saved as soon as they change. A setting with a bad value falls back to its default; a theme orCAL does not ship becomes Gruvbox dark, Colony's fallback, and an unknown accent becomes the theme's own. A file that orCAL reads but that is not a JSON object is moved to `preferences.json.bak` and orCAL starts from the defaults. A file it cannot read (permissions, a lock) or cannot move aside is left untouched: orCAL starts from the defaults and saves nothing over it until the next launch |
 | Window position | stored | `window-position.json` in the settings folder, so the window opens where you left it. On Wayland the compositor decides where windows open |
 | Web view profile | stored | the web view's own storage and cache, in `webview/` in the data folder on Linux and Windows, and in the system's WebKit location on macOS. orCAL keeps nothing of its own there once the old theme below has been imported |
 | Expressions and results | neither | kept only in the open window, gone when you close it |
