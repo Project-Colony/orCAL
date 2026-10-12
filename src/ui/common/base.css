@@ -298,7 +298,7 @@ select {
 
 /* The program's name: the way into Preferences (design/navigation.md). */
 .status-brand {
-  align-self: center;
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 8px;
