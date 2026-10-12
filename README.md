@@ -152,7 +152,8 @@ French strings complete.
 - `src/paths.rs`: the Colony folder layout
 - `src/window_state.rs`: remembers the window position between runs
 - `src/migrate.rs`: copies the settings of versions before the Colony layout
-- `src/linux_display.rs`: the WebKitGTK workaround for Wayland
+- `src/linux_display.rs`: turns off WebKitGTK's DMA-BUF renderer and
+  accelerated compositing under Wayland, where they fail on some drivers
 - `src/i18n.rs`: tests that hold the two locale files to the same keys
 - `src/ui/`: the HTML/CSS/JS interface, `index.html` for the phone layout and
   `tablet-mode/` for the tablet one
@@ -231,7 +232,7 @@ roaming) application folders:
 | Data | Stored or sent | Where, and why |
 |---|---|---|
 | Preferences | stored | `preferences/preferences.json` in the settings folder: theme, accent, text size, accessibility, language and startup layout, saved as soon as they change. A file orCAL cannot read is kept as `preferences.json.bak` and orCAL starts from the defaults |
-| Window position | stored | `window-position.json` in the settings folder, so the window opens where you left it |
+| Window position | stored | `window-position.json` in the settings folder, so the window opens where you left it. On Wayland the compositor decides where windows open |
 | Web view profile | stored | the web view's own storage and cache, in `webview/` in the data folder on Linux and Windows, and in the system's WebKit location on macOS. orCAL keeps nothing of its own there once the old theme below has been imported |
 | Expressions and results | neither | kept only in the open window, gone when you close it |
 
