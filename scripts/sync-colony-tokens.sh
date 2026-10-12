@@ -14,10 +14,17 @@ commit="${1:?usage: $0 <Project-Colony-Resources commit>}"
 base="https://raw.githubusercontent.com/Project-Colony/Project-Colony-Resources/${commit}/generated"
 dest="$(dirname "$0")/../src/ui/vendor/colony"
 
+# Everything is downloaded first: a failed download leaves the vendored files
+# and SOURCE exactly as they were. The download directory sits next to them,
+# on the same file system, so moving the files in renames them.
 mkdir -p "$dest"
+tmp="$(mktemp -d "$dest/../.colony-sync.XXXXXX")"
+trap 'rm -rf "$tmp"' EXIT
 for file in css/colony-themes.css css/colony-accents.css themes.json; do
   curl --fail --silent --show-error --location "$base/$file" |
-    perl -CS -pe 's/[\x{2013}\x{2014}]/-/g' >"$dest/$(basename "$file")"
+    perl -CS -pe 's/[\x{2013}\x{2014}]/-/g' >"$tmp/$(basename "$file")"
 done
 printf 'Project-Colony-Resources %s, generated/, with em and en dashes replaced by hyphens\n' \
-  "$commit" >"$dest/SOURCE"
+  "$commit" >"$tmp/SOURCE"
+
+mv "$tmp/colony-themes.css" "$tmp/colony-accents.css" "$tmp/themes.json" "$tmp/SOURCE" "$dest/"

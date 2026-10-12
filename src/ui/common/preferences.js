@@ -440,7 +440,8 @@ const aboutRow = (titleKey, value) =>
 const about = () => {
   const rows = h("div", { class: "about-rows" });
   const fill = (info) => {
-    const unknown = t("desktop_only");
+    // Empty while the desktop app answers; the note only outside it.
+    const unknown = invoke ? "" : t("desktop_only");
     rows.replaceChildren(
       aboutRow("preferences_about_version", info?.version ?? unknown),
       aboutRow("preferences_about_license", info?.license ?? unknown),

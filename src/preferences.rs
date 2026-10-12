@@ -4,12 +4,13 @@
 //! colony-ui's `StandardPreferences`, so the file reads like every other Colony
 //! program's. orCAL adds its own fields after them.
 //!
-//! Loading never fails: a field with a bad value falls back to its default and
+//! Loading is lenient: a field with a bad value falls back to its default and
 //! the rest of the file is kept, unknown fields are ignored, and a file that is
 //! not a JSON object at all is set aside as `preferences.json.bak` rather than
-//! overwritten by the next save. A theme the vendored Colony catalog does not
-//! have becomes Gruvbox dark, Colony's fallback, and an unknown accent the
-//! theme's own.
+//! overwritten by the next save. A file that exists but cannot be read is left
+//! alone, and changes then last for the session only. A theme the vendored
+//! Colony catalog does not have becomes Gruvbox dark, Colony's fallback, and
+//! an unknown accent the theme's own.
 
 use std::fs;
 use std::io;
@@ -227,36 +228,28 @@ pub fn file_in(config_dir: &Path) -> PathBuf {
     config_dir.join("preferences").join("preferences.json")
 }
 
-/// Read `path`: the defaults when it does not exist, and when it cannot be
-/// read as a JSON object, after moving it aside to `preferences.json.bak`.
-pub fn load(path: &Path) -> Preferences {
-    let object = match fs::read_to_string(path) {
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Preferences::default(),
-        Err(error) => Err(error.to_string()),
-        Ok(text) => match serde_json::from_str::<Value>(&text) {
-            Ok(Value::Object(object)) => Ok(object),
-            Ok(_) => Err("not a JSON object".to_string()),
-            Err(error) => Err(error.to_string()),
-        },
+/// Read `path`: the defaults when it does not exist, and when it is not a
+/// JSON object, after moving it aside to `preferences.json.bak`. Any other
+/// read error (permissions, a file locked by a virus scan) is returned and the
+/// file is left as it is: it was never parsed, so nothing may replace it.
+pub fn load(path: &Path) -> io::Result<Preferences> {
+    let bytes = match fs::read(path) {
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Preferences::default()),
+        result => result?,
     };
-    match object {
-        Ok(object) => Preferences::from_object(&object),
-        Err(reason) => {
-            let backup = path.with_extension("json.bak");
-            match fs::rename(path, &backup) {
-                Ok(()) => log::warn!(
-                    "{} is unreadable ({reason}); kept as {} and started from the defaults",
-                    path.display(),
-                    backup.display()
-                ),
-                Err(error) => log::warn!(
-                    "{} is unreadable ({reason}) and could not be set aside: {error}",
-                    path.display()
-                ),
-            }
-            Preferences::default()
-        }
-    }
+    let reason = match serde_json::from_slice::<Value>(&bytes) {
+        Ok(Value::Object(object)) => return Ok(Preferences::from_object(&object)),
+        Ok(_) => "not a JSON object".to_string(),
+        Err(error) => error.to_string(),
+    };
+    let backup = path.with_extension("json.bak");
+    fs::rename(path, &backup)?;
+    log::warn!(
+        "{} is unreadable ({reason}); kept as {} and started from the defaults",
+        path.display(),
+        backup.display()
+    );
+    Ok(Preferences::default())
 }
 
 /// Write `preferences` to `path` atomically, creating its directory.
@@ -270,18 +263,33 @@ pub fn save(path: &Path, preferences: &Preferences) -> io::Result<()> {
 
 /// The preferences in effect, shared by the setup code and the commands.
 pub struct Store {
-    /// `None` when the platform has no config directory: changes then last
-    /// for the session only.
+    /// `None` when the platform has no config directory or the file could
+    /// not be read: changes then last for the session only.
     path: Option<PathBuf>,
     current: Mutex<Preferences>,
 }
 
 impl Store {
     pub fn open(path: Option<PathBuf>) -> Self {
-        let current = path.as_deref().map(load).unwrap_or_default();
-        Store {
-            path,
-            current: Mutex::new(current),
+        let session_only = Store {
+            path: None,
+            current: Mutex::default(),
+        };
+        let Some(path) = path else {
+            return session_only;
+        };
+        match load(&path) {
+            Ok(current) => Store {
+                path: Some(path),
+                current: Mutex::new(current),
+            },
+            Err(error) => {
+                log::warn!(
+                    "{} not read, changes last for this session only: {error}",
+                    path.display()
+                );
+                session_only
+            }
         }
     }
 
@@ -465,7 +473,7 @@ mod tests {
     #[test]
     fn a_missing_file_is_the_defaults() {
         let dir = temp_dir("prefs-missing");
-        assert_eq!(load(&file_in(&dir)), Preferences::default());
+        assert_eq!(load(&file_in(&dir)).unwrap(), Preferences::default());
         fs::remove_dir_all(dir).unwrap();
     }
 
@@ -479,7 +487,7 @@ mod tests {
             ..Preferences::default()
         };
         save(&path, &p).unwrap();
-        assert_eq!(load(&path), p);
+        assert_eq!(load(&path).unwrap(), p);
         assert!(!path.with_extension("json.tmp").exists());
         fs::remove_dir_all(dir).unwrap();
     }
@@ -490,13 +498,34 @@ mod tests {
         let path = file_in(&dir);
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(&path, "{\"selected_theme\": \"nor").unwrap();
-        assert_eq!(load(&path), Preferences::default());
+        assert_eq!(load(&path).unwrap(), Preferences::default());
         assert!(!path.exists());
         let backup = path.with_extension("json.bak");
         assert_eq!(
             fs::read_to_string(backup).unwrap(),
             "{\"selected_theme\": \"nor"
         );
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn a_file_that_cannot_be_read_is_never_replaced() {
+        // A directory where the file should be: reading it fails on every
+        // platform, as a permission error or a sharing violation would.
+        let dir = temp_dir("prefs-unreadable");
+        let path = file_in(&dir);
+        fs::create_dir_all(&path).unwrap();
+        assert!(load(&path).is_err());
+        assert!(path.is_dir());
+        assert!(!path.with_extension("json.bak").exists());
+
+        // The store keeps changes for the session and writes nothing.
+        let store = Store::open(Some(path.clone()));
+        let mut p = store.get();
+        p.high_contrast = true;
+        assert_eq!(store.set(p.clone()).unwrap(), p);
+        assert_eq!(store.get(), p);
+        assert!(path.is_dir());
         fs::remove_dir_all(dir).unwrap();
     }
 
@@ -508,14 +537,14 @@ mod tests {
         let mut p = store.get();
         p.high_contrast = true;
         assert_eq!(store.set(p.clone()).unwrap(), p);
-        assert_eq!(load(&path), p);
+        assert_eq!(load(&path).unwrap(), p);
 
-        // A file where the preferences directory should be: the write fails,
-        // nothing changes.
+        // A file where the preferences directory should be, appearing after
+        // the store opened: the write fails, nothing changes.
         let blocked = dir.join("blocked");
+        let store = Store::open(Some(file_in(&blocked)));
         fs::create_dir_all(&blocked).unwrap();
         fs::write(blocked.join("preferences"), "").unwrap();
-        let store = Store::open(Some(file_in(&blocked)));
         let before = store.get();
         assert!(store.set(p).is_err());
         assert_eq!(store.get(), before);
