@@ -11,7 +11,10 @@ pub fn configure() {
     if std::env::var("WAYLAND_DISPLAY").is_ok()
         || std::env::var("XDG_SESSION_TYPE").is_ok_and(|v| v == "wayland")
     {
-        for name in ["WEBKIT_DISABLE_DMABUF_RENDERER", "WEBKIT_DISABLE_COMPOSITING_MODE"] {
+        for name in [
+            "WEBKIT_DISABLE_DMABUF_RENDERER",
+            "WEBKIT_DISABLE_COMPOSITING_MODE",
+        ] {
             if std::env::var_os(name).is_none() {
                 std::env::set_var(name, "1");
             }
