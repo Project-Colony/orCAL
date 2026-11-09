@@ -21,7 +21,7 @@ accessibility settings, and it contains no network code.
 
 > **Status:** every release from v0.2.2 on is signed and published for the four
 > targets below. CI checks formatting and lints, builds, runs `--version` and
-> runs the tests on Linux, Windows and macOS, and builds on the Rust 1.90
+> runs the tests on Linux, Windows and macOS, and builds on the Rust 1.99
 > floor. The tests cover the engine (operators, precedence, rounding, the
 > scientific functions, every error), the preferences file, the folder layout,
 > the migration from older versions, the window position and the English and
@@ -127,7 +127,7 @@ cd orCAL
 cargo build --release
 ```
 
-Requires Rust 1.90 or newer. On Debian and Ubuntu you also need
+Requires Rust 1.99 or newer. On Debian and Ubuntu you also need
 `libwebkit2gtk-4.1-dev`; other systems need the equivalent WebKitGTK 4.1
 development package on Linux, or the platform toolchain Tauri lists in its
 [prerequisites](https://v2.tauri.app/start/prerequisites/). The binary is
