@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.4](https://github.com/Project-Colony/orCAL/compare/v0.4.3...v0.4.4) (2026-11-24)
+
+
+### Fixes
+
+* **deps:** update dependencies and Rust to 1.100 ([#61](https://github.com/Project-Colony/orCAL/issues/61)) ([4ff0830](https://github.com/Project-Colony/orCAL/commit/4ff08307cae3e1a2ae9d5bcf5df373b9d7d70653))
+
 ## [0.4.3](https://github.com/Project-Colony/orCAL/compare/v0.4.2...v0.4.3) (2026-11-09)
 
 
